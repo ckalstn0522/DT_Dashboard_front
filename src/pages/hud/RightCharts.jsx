@@ -10,7 +10,7 @@ import VehicleTypeChart from "../../components/dashboard/VehicleTypeChart";
 import GEHAnalysis from "../../components/dashboard/GEHAnalysis";
 
 // API 서버 주소
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://dt-dashboard-back.onrender.com';
 
 export default function RightCharts() {
   // Unity가 선택해준 교차로 ID

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import IntersectionMap from "../../components/dashboard/IntersectionMap"; 
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://dt-dashboard-back.onrender.com';
 
 export default function LeftMap() {
   const { data: intersections, isLoading } = useQuery({
@@ -39,7 +39,7 @@ export default function LeftMap() {
                 intersections={intersections}
                 onSelectIntersection={handleMarkerClick}
                 selectedIntersectionId={null}
-                initialZoom={18}
+                
               />
             </div>
           </CardContent>
