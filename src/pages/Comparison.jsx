@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 // ▲▲▲ [수정됨] ▲▲▲
 
 // API 서버 주소
-const API_URL = 'https://dt-dashboard-back.onrender.com';
+const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 
 export default function Comparison() {
   // ▼▼▼ [수정됨] base44 -> axios로 API 호출 변경 ▼▼▼

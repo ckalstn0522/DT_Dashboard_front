@@ -13,7 +13,7 @@ import GEHAnalysis from "../components/dashboard/GEHAnalysis";
 import TimePeriodSelector from "../components/dashboard/TimePeriodSelector";
 import DateSelector from "../components/dashboard/DateSelector";
 
-const API_URL = 'https://dt-dashboard-back.onrender.com';
+const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 
 export default function Dashboard() {
   const [selectedIntersection, setSelectedIntersection] = useState(null);

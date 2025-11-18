@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import IntersectionMap from "../../components/dashboard/IntersectionMap"; 
 
-const API_URL = 'https://dt-dashboard-back.onrender.com';
+const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 
 export default function LeftMap() {
   const { data: intersections, isLoading } = useQuery({

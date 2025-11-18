@@ -11,7 +11,7 @@ import VehicleTypeChart from "../../components/dashboard/VehicleTypeChart";
 import GEHAnalysis from "../../components/dashboard/GEHAnalysis";
 
 // API 서버 주소
-const API_URL = 'https://dt-dashboard-back.onrender.com';//'http://localhost:3001';
+const API_URL = 'https://dt-dashboard-back.onrender.com/api';//'http://localhost:3001';
 
 export default function CombinedHUD() {
   const [selectedId, setSelectedId] = useState(null);

@@ -13,7 +13,7 @@ import { Route, Clock, Trash2, MapPin, Loader2 } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 
 // API 서버 주소
-const API_URL = 'https://dt-dashboard-back.onrender.com';
+const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 
 const intersectionIcon = new L.Icon({
   iconUrl: 'data:image/svg+xml;base64,' + btoa(`
