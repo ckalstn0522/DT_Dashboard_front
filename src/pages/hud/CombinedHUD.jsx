@@ -54,79 +54,87 @@ export default function CombinedHUD() {
   return (
     <div className="flex w-full h-screen bg-transparent overflow-hidden">
       
-      {/* --- [왼쪽 패널] 맵 (너비 20%) --- */}
-      {/* ▼▼▼ [수정됨] 너비를 20%로 줄였습니다 ▼▼▼ */}
-      <div className="w-[20%] h-full p-4 pointer-events-auto">
-        <Card className="w-full h-full bg-slate-900/70 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
-          <CardContent className="p-0 h-full">
-            <div className="h-full">
+      {/* --- [왼쪽 패널] 맵 (너비 25%) --- */}
+      <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col">
+        <Card className="flex-1 w-full bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
+          <CardContent className="p-0 h-full relative">
+            <div className="h-full w-full absolute inset-0">
               <IntersectionMap
                 intersections={intersections}
                 onSelectIntersection={handleMarkerClick}
                 selectedIntersectionId={selectedId}
-                initialZoom={15}
+                // ▼▼▼ [수정됨] 줌 레벨을 14로 낮췄습니다 (멀리 보기) ▼▼▼
+                initialZoom={14}
+                // ▲▲▲ [수정됨] ▲▲▲
               />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* --- [중앙 패널] 빈 공간 (너비 60%) --- */}
-      {/* ▼▼▼ [수정됨] 남는 공간을 60%로 늘렸습니다 ▼▼▼ */}
-      <div className="w-[60%] h-full pointer-events-none bg-transparent" />
+      {/* --- [중앙 패널] 빈 공간 (너비 50%) --- */}
+      <div className="w-[50%] h-full pointer-events-none bg-transparent" />
 
-      {/* --- [오른쪽 패널] 차트 (너비 20%) --- */}
-      {/* ▼▼▼ [수정됨] 너비를 20%로 줄였습니다 ▼▼▼ */}
-      <div className="w-[20%] h-full p-4 pointer-events-auto overflow-y-auto space-y-4">
+      {/* --- [오른쪽 패널] 차트 (너비 25%) --- */}
+      <div className="w-[25%] h-full p-3 pointer-events-auto overflow-y-auto custom-scrollbar space-y-3">
         
-        {/* 정보 카드 */}
-        <Card className="bg-slate-900/70 backdrop-blur-xl border-slate-700/50 shadow-2xl transition-all hover:bg-slate-900/80">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-slate-100 flex items-center gap-2 text-lg font-medium">
-              <Building2 className="w-5 h-5 text-cyan-400" />
+        {/* 1. 정보 카드 (Compact 스타일 적용) */}
+        <Card className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
+          {/* 패딩을 pb-2로 줄임 */}
+          <CardHeader className="pb-2 pt-4 px-4"> 
+            <CardTitle className="text-slate-100 flex items-center gap-2 text-base font-semibold">
+              <Building2 className="w-4 h-4 text-cyan-400" />
               {selectedIntersection ? selectedIntersection.intersection_name : "교차로 선택"}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 pb-4">
             {selectedIntersection ? (
-              <div className="text-sm text-slate-300 space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-400">ID:</span>
-                  <span className="font-mono">{selectedIntersection.intersection_id}</span>
+              // 글자 크기를 text-xs(아주 작음) ~ sm으로 조정하여 짤림 방지
+              <div className="text-xs text-slate-300 space-y-1.5">
+                <div className="flex justify-between items-center border-b border-slate-700/50 pb-1">
+                  <span className="text-slate-400">ID</span>
+                  <span className="font-mono font-bold text-cyan-200">{selectedIntersection.intersection_id}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-400">위도:</span>
-                  <span className="font-mono">{parseFloat(selectedIntersection.latitude).toFixed(4)}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">위도</span>
+                  <span className="font-mono">{parseFloat(selectedIntersection.latitude).toFixed(5)}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-400">경도:</span>
-                  <span className="font-mono">{parseFloat(selectedIntersection.longitude).toFixed(4)}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">경도</span>
+                  <span className="font-mono">{parseFloat(selectedIntersection.longitude).toFixed(5)}</span>
                 </div>
               </div>
             ) : (
-              <div className="text-sm text-slate-400 py-2">지도에서 마커를 클릭하세요.</div>
+              <div className="text-xs text-slate-500 text-center py-2">지도에서 마커를 클릭하세요.</div>
             )}
           </CardContent>
         </Card>
 
-        {/* 차트들 (선택 시 표시) */}
+        {/* 2. 차트 영역 (Compact 스타일 적용) */}
         {selectedId && (
           <>
-            <Card className="bg-slate-900/70 backdrop-blur-xl border-slate-700/50 shadow-2xl transition-all hover:bg-slate-900/80">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-slate-100 text-base font-medium">차종 분포</CardTitle>
+            {/* 차종 분포 */}
+            <Card className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
+              <CardHeader className="py-3 px-4 border-b border-slate-700/30">
+                <CardTitle className="text-slate-100 text-sm font-medium">차종 분포</CardTitle>
               </CardHeader>
-              <CardContent>
-                <VehicleTypeChart trafficData={filteredTrafficData} />
+              <CardContent className="p-2">
+                {/* min-w-0과 h-[200px]로 크기 강제 제한 */}
+                <div className="w-full h-[200px] min-w-0">
+                  <VehicleTypeChart trafficData={filteredTrafficData} />
+                </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-slate-900/70 backdrop-blur-xl border-slate-700/50 shadow-2xl transition-all hover:bg-slate-900/80">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-slate-100 text-base font-medium">GEH 분석</CardTitle>
+            {/* GEH 분석 */}
+            <Card className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
+              <CardHeader className="py-3 px-4 border-b border-slate-700/30">
+                <CardTitle className="text-slate-100 text-sm font-medium">GEH 분석</CardTitle>
               </CardHeader>
-              <CardContent>
-                <GEHAnalysis trafficData={filteredTrafficData} />
+              <CardContent className="p-2">
+                <div className="w-full h-[200px] min-w-0">
+                  <GEHAnalysis trafficData={filteredTrafficData} />
+                </div>
               </CardContent>
             </Card>
           </>
