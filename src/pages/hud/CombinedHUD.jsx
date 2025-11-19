@@ -63,9 +63,7 @@ export default function CombinedHUD() {
                 intersections={intersections}
                 onSelectIntersection={handleMarkerClick}
                 selectedIntersectionId={selectedId}
-                // ▼▼▼ [수정됨] 줌 레벨을 14로 낮췄습니다 (멀리 보기) ▼▼▼
-                initialZoom={14}
-                // ▲▲▲ [수정됨] ▲▲▲
+                initialZoom={14} 
               />
             </div>
           </CardContent>
@@ -76,11 +74,11 @@ export default function CombinedHUD() {
       <div className="w-[50%] h-full pointer-events-none bg-transparent" />
 
       {/* --- [오른쪽 패널] 차트 (너비 25%) --- */}
-      <div className="w-[25%] h-full p-3 pointer-events-auto overflow-y-auto custom-scrollbar space-y-3">
+      {/* ▼▼▼ [수정됨] h-full과 flex-col을 사용하여 세로를 꽉 채움 ▼▼▼ */}
+      <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-3">
         
-        {/* 1. 정보 카드 (Compact 스타일 적용) */}
-        <Card className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
-          {/* 패딩을 pb-2로 줄임 */}
+        {/* 1. 정보 카드 (고정 크기 - shrink-0) */}
+        <Card className="shrink-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
           <CardHeader className="pb-2 pt-4 px-4"> 
             <CardTitle className="text-slate-100 flex items-center gap-2 text-base font-semibold">
               <Building2 className="w-4 h-4 text-cyan-400" />
@@ -89,7 +87,6 @@ export default function CombinedHUD() {
           </CardHeader>
           <CardContent className="px-4 pb-4">
             {selectedIntersection ? (
-              // 글자 크기를 text-xs(아주 작음) ~ sm으로 조정하여 짤림 방지
               <div className="text-xs text-slate-300 space-y-1.5">
                 <div className="flex justify-between items-center border-b border-slate-700/50 pb-1">
                   <span className="text-slate-400">ID</span>
@@ -110,31 +107,31 @@ export default function CombinedHUD() {
           </CardContent>
         </Card>
 
-        {/* 2. 차트 영역 (Compact 스타일 적용) */}
+        {/* 차트들 (선택 시 표시) */}
         {selectedId && (
           <>
-            {/* 차종 분포 */}
-            <Card className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
-              <CardHeader className="py-3 px-4 border-b border-slate-700/30">
+            {/* 2. 차종 분포 (남은 공간의 절반 차지 - flex-1) */}
+            <Card className="flex-1 min-h-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
+              <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
                 <CardTitle className="text-slate-100 text-sm font-medium">차종 분포</CardTitle>
               </CardHeader>
-              <CardContent className="p-2">
-                {/* min-w-0과 h-[200px]로 크기 강제 제한 */}
-                <div className="w-full h-[200px] min-w-0">
-                  <VehicleTypeChart trafficData={filteredTrafficData} />
+              <CardContent className="p-2 flex-1 min-h-0 relative">
+                {/* 내부 div를 absolute로 채워서 차트가 부모 크기를 따라가게 함 */}
+                <div className="absolute inset-0 p-2">
+                    <VehicleTypeChart trafficData={filteredTrafficData} />
                 </div>
               </CardContent>
             </Card>
             
-            {/* GEH 분석 */}
-            <Card className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
-              <CardHeader className="py-3 px-4 border-b border-slate-700/30">
+            {/* 3. GEH 분석 (남은 공간의 절반 차지 - flex-1) */}
+            <Card className="flex-1 min-h-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
+              <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
                 <CardTitle className="text-slate-100 text-sm font-medium">GEH 분석</CardTitle>
               </CardHeader>
-              <CardContent className="p-2">
-                <div className="w-full h-[200px] min-w-0">
-                  <GEHAnalysis trafficData={filteredTrafficData} />
-                </div>
+              <CardContent className="p-2 flex-1 min-h-0 relative">
+                 <div className="absolute inset-0 p-2">
+                    <GEHAnalysis trafficData={filteredTrafficData} />
+                 </div>
               </CardContent>
             </Card>
           </>
