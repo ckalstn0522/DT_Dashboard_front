@@ -11,7 +11,7 @@ import VehicleTypeChart from "../../components/dashboard/VehicleTypeChart";
 import GEHAnalysis from "../../components/dashboard/GEHAnalysis";
 
 // API 서버 주소
-const API_URL = 'https://dt-dashboard-back.onrender.com/api';//'http://localhost:3001';
+const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 
 export default function CombinedHUD() {
   const [selectedId, setSelectedId] = useState(null);
@@ -28,13 +28,23 @@ export default function CombinedHUD() {
     initialData: [],
   });
 
+  // ▼▼▼ [수정된 부분] Unity와 통신하는 함수 ▼▼▼
   const handleMarkerClick = (intersection) => {
+    // 1. React 내부 상태 업데이트 (오른쪽 차트 패널 갱신용)
     setSelectedId(intersection.intersection_id);
-    const message = `CLICKED:${intersection.intersection_id}`;
-    document.title = message;
-    console.log("Signal to Unity:", message);
-    setTimeout(() => { document.title = "HUD"; }, 200);
+
+    // 2. Unity로 카메라 이동 신호 전송 (UWB 정석 방식)
+    if (window.uwb) {
+      console.log(`[HUD] Unity로 이동 요청: ID ${intersection.intersection_id}`);
+      
+      // Unity C#에 등록된 "MoveToIntersection" 메서드 호출
+      // C#에서 int형으로 받기로 했으므로 Number()로 변환해서 보냅니다.
+      window.uwb.ExecuteJsMethod("MoveToIntersection", Number(intersection.intersection_id));
+    } else {
+      console.warn("Unity 환경이 아닙니다. (uwb 객체 없음)");
+    }
   };
+  // ▲▲▲ [수정 끝] ▲▲▲
 
   const filteredTrafficData = useMemo(() => {
     if (!selectedId) return [];
@@ -74,10 +84,9 @@ export default function CombinedHUD() {
       <div className="w-[50%] h-full pointer-events-none bg-transparent" />
 
       {/* --- [오른쪽 패널] 차트 (너비 25%) --- */}
-      {/* ▼▼▼ [수정됨] h-full과 flex-col을 사용하여 세로를 꽉 채움 ▼▼▼ */}
       <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-3">
         
-        {/* 1. 정보 카드 (고정 크기 - shrink-0) */}
+        {/* 1. 정보 카드 */}
         <Card className="shrink-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
           <CardHeader className="pb-2 pt-4 px-4"> 
             <CardTitle className="text-slate-100 flex items-center gap-2 text-base font-semibold">
@@ -110,20 +119,19 @@ export default function CombinedHUD() {
         {/* 차트들 (선택 시 표시) */}
         {selectedId && (
           <>
-            {/* 2. 차종 분포 (남은 공간의 절반 차지 - flex-1) */}
+            {/* 2. 차종 분포 */}
             <Card className="flex-1 min-h-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
               <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
                 <CardTitle className="text-slate-100 text-sm font-medium">차종 분포</CardTitle>
               </CardHeader>
               <CardContent className="p-2 flex-1 min-h-0 relative">
-                {/* 내부 div를 absolute로 채워서 차트가 부모 크기를 따라가게 함 */}
                 <div className="absolute inset-0 p-2">
                     <VehicleTypeChart trafficData={filteredTrafficData} />
                 </div>
               </CardContent>
             </Card>
             
-            {/* 3. GEH 분석 (남은 공간의 절반 차지 - flex-1) */}
+            {/* 3. GEH 분석 */}
             <Card className="flex-1 min-h-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
               <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
                 <CardTitle className="text-slate-100 text-sm font-medium">GEH 분석</CardTitle>
