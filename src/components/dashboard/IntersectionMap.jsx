@@ -68,7 +68,7 @@ export default function IntersectionMap({ intersections, onSelectIntersection, s
   return (
     <MapContainer
       center={center}
-      zoom={15}
+      zoom={14}
       style={{ height: '100%', width: '100%' }}
       maxBounds={bounds}
       maxBoundsViscosity={1.0}
