@@ -5,12 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Building2 } from 'lucide-react';
 
-// 컴포넌트 불러오기
 import IntersectionMap from "../../components/dashboard/IntersectionMap";
 import VehicleTypeChart from "../../components/dashboard/VehicleTypeChart";
 import GEHAnalysis from "../../components/dashboard/GEHAnalysis";
 
-// API 서버 주소
 const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 
 export default function CombinedHUD() {
@@ -56,7 +54,7 @@ export default function CombinedHUD() {
   return (
     <div className="flex w-full h-screen bg-transparent overflow-hidden">
       
-      {/* --- [왼쪽 패널] 맵 (너비 25%) --- */}
+      {/* [왼쪽 패널] */}
       <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col">
         <Card className="flex-1 w-full bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
           <CardContent className="p-0 h-full relative">
@@ -72,14 +70,19 @@ export default function CombinedHUD() {
         </Card>
       </div>
 
-      {/* --- [중앙 패널] 빈 공간 (너비 50%) --- */}
+      {/* [중앙 패널] */}
       <div className="w-[50%] h-full pointer-events-none bg-transparent" />
 
-      {/* --- [오른쪽 패널] 차트 (너비 25%) --- */}
-      {/* ▼▼▼ [수정됨 1] overflow-y-auto 추가하여 스크롤 활성화, h-full로 높이 고정 ▼▼▼ */}
-      <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-3 overflow-y-auto">
+      {/* [오른쪽 패널] - 스타일 강제 적용 */}
+      <div 
+        className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-3"
+        style={{ 
+          overflowY: 'auto',   // 세로 스크롤 강제 활성화
+          maxHeight: '100vh'   // 화면 높이를 넘어가면 스크롤 생성
+        }}
+      >
         
-        {/* 1. 정보 카드 (항상 표시, 크기 줄어들지 않음 shrink-0) */}
+        {/* 1. 정보 카드 (높이 고정 X, 내용만큼) */}
         <Card className="shrink-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
           <CardHeader className="pb-2 pt-4 px-4"> 
             <CardTitle className="text-slate-100 flex items-center gap-2 text-base font-semibold">
@@ -109,12 +112,17 @@ export default function CombinedHUD() {
           </CardContent>
         </Card>
 
-        {/* 차트들 (선택 시 표시) */}
+        {/* 차트들 */}
         {selectedId && (
           <>
             {/* 2. 차종 분포 */}
-            {/* ▼▼▼ [수정됨 2] flex-1 제거하고 h-[320px]로 고정 높이 부여, shrink-0으로 찌그러짐 방지 ▼▼▼ */}
-            <Card className="shrink-0 h-[320px] bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
+            <Card 
+              className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col"
+              style={{ 
+                minHeight: '350px',  // 최소 높이 강제 (줄어들지 않음)
+                flexShrink: 0        // 공간이 부족해도 찌그러지지 않음
+              }}
+            >
               <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
                 <CardTitle className="text-slate-100 text-sm font-medium">차종 분포</CardTitle>
               </CardHeader>
@@ -126,8 +134,13 @@ export default function CombinedHUD() {
             </Card>
             
             {/* 3. GEH 분석 */}
-            {/* ▼▼▼ [수정됨 3] flex-1 제거하고 h-[320px]로 고정 높이 부여 ▼▼▼ */}
-            <Card className="shrink-0 h-[320px] bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
+            <Card 
+              className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col"
+              style={{ 
+                minHeight: '350px',  // 최소 높이 강제
+                flexShrink: 0        // 찌그러짐 방지
+              }}
+            >
               <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
                 <CardTitle className="text-slate-100 text-sm font-medium">GEH 분석</CardTitle>
               </CardHeader>
@@ -138,8 +151,8 @@ export default function CombinedHUD() {
               </CardContent>
             </Card>
 
-            {/* 스크롤 바닥 여유 공간 (선택 사항) */}
-            <div className="h-10 shrink-0"></div>
+            {/* 스크롤 여유 공간 */}
+            <div style={{ height: '50px', flexShrink: 0 }}></div>
           </>
         )}
       </div>
