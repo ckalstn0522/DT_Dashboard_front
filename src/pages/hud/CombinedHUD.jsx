@@ -29,10 +29,7 @@ export default function CombinedHUD() {
   });
 
   const handleMarkerClick = (intersection) => {
-    // 1. React 내부 상태 업데이트
     setSelectedId(intersection.intersection_id);
-
-    // 2. Unity로 카메라 이동 신호 전송
     if (window.uwb) {
       console.log(`[HUD] Unity로 이동 요청: ID ${intersection.intersection_id}`);
       window.uwb.ExecuteJsMethod("MoveToIntersection", Number(intersection.intersection_id));
@@ -61,9 +58,6 @@ export default function CombinedHUD() {
       
       {/* --- [왼쪽 패널] 맵 (너비 25%) --- */}
       <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col">
-        {/* bg-slate-900/80: 검은색 배경에 80% 불투명도 (뒤가 살짝 비침)
-           backdrop-blur-xl: 뒤에 있는 유니티 화면을 흐리게 처리 (유리 효과)
-        */}
         <Card className="flex-1 w-full bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
           <CardContent className="p-0 h-full relative">
             <div className="h-full w-full absolute inset-0">
@@ -79,16 +73,13 @@ export default function CombinedHUD() {
       </div>
 
       {/* --- [중앙 패널] 빈 공간 (너비 50%) --- */}
-      {/* pointer-events-none으로 설정하여 중앙 클릭 시 유니티 화면이 클릭되도록 함 */}
       <div className="w-[50%] h-full pointer-events-none bg-transparent" />
 
       {/* --- [오른쪽 패널] 차트 (너비 25%) --- */}
-      {/* overflow-y-auto: 내용이 많으면 세로 스크롤 생성 
-          max-h-screen: 화면 높이를 넘어가지 않도록 제한
-      */}
-      <div className="w-[25%] h-full max-h-screen p-3 pointer-events-auto flex flex-col gap-3 overflow-y-auto scrollbar-hide">
+      {/* ▼▼▼ [수정됨 1] overflow-y-auto 추가하여 스크롤 활성화, h-full로 높이 고정 ▼▼▼ */}
+      <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-3 overflow-y-auto">
         
-        {/* 1. 정보 카드 */}
+        {/* 1. 정보 카드 (항상 표시, 크기 줄어들지 않음 shrink-0) */}
         <Card className="shrink-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
           <CardHeader className="pb-2 pt-4 px-4"> 
             <CardTitle className="text-slate-100 flex items-center gap-2 text-base font-semibold">
@@ -122,8 +113,8 @@ export default function CombinedHUD() {
         {selectedId && (
           <>
             {/* 2. 차종 분포 */}
-            {/* min-h-[300px]: 최소 높이를 300px로 강제하여 차트가 찌그러지지 않게 함 */}
-            <Card className="shrink-0 min-h-[300px] bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
+            {/* ▼▼▼ [수정됨 2] flex-1 제거하고 h-[320px]로 고정 높이 부여, shrink-0으로 찌그러짐 방지 ▼▼▼ */}
+            <Card className="shrink-0 h-[320px] bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
               <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
                 <CardTitle className="text-slate-100 text-sm font-medium">차종 분포</CardTitle>
               </CardHeader>
@@ -135,8 +126,8 @@ export default function CombinedHUD() {
             </Card>
             
             {/* 3. GEH 분석 */}
-            {/* min-h-[300px]: 최소 높이 확보 */}
-            <Card className="shrink-0 min-h-[300px] bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
+            {/* ▼▼▼ [수정됨 3] flex-1 제거하고 h-[320px]로 고정 높이 부여 ▼▼▼ */}
+            <Card className="shrink-0 h-[320px] bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
               <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
                 <CardTitle className="text-slate-100 text-sm font-medium">GEH 분석</CardTitle>
               </CardHeader>
@@ -146,9 +137,9 @@ export default function CombinedHUD() {
                  </div>
               </CardContent>
             </Card>
-            
-            {/* 스크롤 여유 공간 */}
-            <div className="h-10 shrink-0" />
+
+            {/* 스크롤 바닥 여유 공간 (선택 사항) */}
+            <div className="h-10 shrink-0"></div>
           </>
         )}
       </div>
