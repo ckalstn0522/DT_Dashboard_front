@@ -28,23 +28,18 @@ export default function CombinedHUD() {
     initialData: [],
   });
 
-  // ▼▼▼ [수정된 부분] Unity와 통신하는 함수 ▼▼▼
   const handleMarkerClick = (intersection) => {
-    // 1. React 내부 상태 업데이트 (오른쪽 차트 패널 갱신용)
+    // 1. React 내부 상태 업데이트
     setSelectedId(intersection.intersection_id);
 
-    // 2. Unity로 카메라 이동 신호 전송 (UWB 정석 방식)
+    // 2. Unity로 카메라 이동 신호 전송
     if (window.uwb) {
       console.log(`[HUD] Unity로 이동 요청: ID ${intersection.intersection_id}`);
-      
-      // Unity C#에 등록된 "MoveToIntersection" 메서드 호출
-      // C#에서 int형으로 받기로 했으므로 Number()로 변환해서 보냅니다.
       window.uwb.ExecuteJsMethod("MoveToIntersection", Number(intersection.intersection_id));
     } else {
       console.warn("Unity 환경이 아닙니다. (uwb 객체 없음)");
     }
   };
-  // ▲▲▲ [수정 끝] ▲▲▲
 
   const filteredTrafficData = useMemo(() => {
     if (!selectedId) return [];
@@ -66,6 +61,9 @@ export default function CombinedHUD() {
       
       {/* --- [왼쪽 패널] 맵 (너비 25%) --- */}
       <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col">
+        {/* bg-slate-900/80: 검은색 배경에 80% 불투명도 (뒤가 살짝 비침)
+           backdrop-blur-xl: 뒤에 있는 유니티 화면을 흐리게 처리 (유리 효과)
+        */}
         <Card className="flex-1 w-full bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
           <CardContent className="p-0 h-full relative">
             <div className="h-full w-full absolute inset-0">
@@ -81,10 +79,14 @@ export default function CombinedHUD() {
       </div>
 
       {/* --- [중앙 패널] 빈 공간 (너비 50%) --- */}
+      {/* pointer-events-none으로 설정하여 중앙 클릭 시 유니티 화면이 클릭되도록 함 */}
       <div className="w-[50%] h-full pointer-events-none bg-transparent" />
 
       {/* --- [오른쪽 패널] 차트 (너비 25%) --- */}
-      <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-3">
+      {/* overflow-y-auto: 내용이 많으면 세로 스크롤 생성 
+          max-h-screen: 화면 높이를 넘어가지 않도록 제한
+      */}
+      <div className="w-[25%] h-full max-h-screen p-3 pointer-events-auto flex flex-col gap-3 overflow-y-auto scrollbar-hide">
         
         {/* 1. 정보 카드 */}
         <Card className="shrink-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
@@ -120,11 +122,12 @@ export default function CombinedHUD() {
         {selectedId && (
           <>
             {/* 2. 차종 분포 */}
-            <Card className="flex-1 min-h-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
+            {/* min-h-[300px]: 최소 높이를 300px로 강제하여 차트가 찌그러지지 않게 함 */}
+            <Card className="shrink-0 min-h-[300px] bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
               <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
                 <CardTitle className="text-slate-100 text-sm font-medium">차종 분포</CardTitle>
               </CardHeader>
-              <CardContent className="p-2 flex-1 min-h-0 relative">
+              <CardContent className="p-2 flex-1 relative">
                 <div className="absolute inset-0 p-2">
                     <VehicleTypeChart trafficData={filteredTrafficData} />
                 </div>
@@ -132,16 +135,20 @@ export default function CombinedHUD() {
             </Card>
             
             {/* 3. GEH 분석 */}
-            <Card className="flex-1 min-h-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
+            {/* min-h-[300px]: 최소 높이 확보 */}
+            <Card className="shrink-0 min-h-[300px] bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
               <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
                 <CardTitle className="text-slate-100 text-sm font-medium">GEH 분석</CardTitle>
               </CardHeader>
-              <CardContent className="p-2 flex-1 min-h-0 relative">
+              <CardContent className="p-2 flex-1 relative">
                  <div className="absolute inset-0 p-2">
                     <GEHAnalysis trafficData={filteredTrafficData} />
                  </div>
               </CardContent>
             </Card>
+            
+            {/* 스크롤 여유 공간 */}
+            <div className="h-10 shrink-0" />
           </>
         )}
       </div>
