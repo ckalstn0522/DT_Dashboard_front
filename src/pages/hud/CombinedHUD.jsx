@@ -54,7 +54,7 @@ export default function CombinedHUD() {
   return (
     <div className="flex w-full h-screen bg-transparent overflow-hidden">
       
-      {/* [왼쪽 패널] */}
+      {/* [왼쪽 패널] 맵 */}
       <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col">
         <Card className="flex-1 w-full bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
           <CardContent className="p-0 h-full relative">
@@ -70,19 +70,20 @@ export default function CombinedHUD() {
         </Card>
       </div>
 
-      {/* [중앙 패널] */}
+      {/* [중앙 패널] 빈 공간 */}
       <div className="w-[50%] h-full pointer-events-none bg-transparent" />
 
-      {/* [오른쪽 패널] - 스타일 강제 적용 */}
+      {/* [오른쪽 패널] 차트 & 정보 */}
       <div 
         className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-3"
         style={{ 
-          overflowY: 'auto',   // 세로 스크롤 강제 활성화
-          maxHeight: '100vh'   // 화면 높이를 넘어가면 스크롤 생성
+          overflowY: 'auto',    // 세로 스크롤 활성화
+          maxHeight: '100vh',   // 화면 높이 제한
+          scrollBehavior: 'smooth' // 부드러운 스크롤
         }}
       >
         
-        {/* 1. 정보 카드 (높이 고정 X, 내용만큼) */}
+        {/* 1. 정보 카드 (항상 상단에 위치) */}
         <Card className="shrink-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
           <CardHeader className="pb-2 pt-4 px-4"> 
             <CardTitle className="text-slate-100 flex items-center gap-2 text-base font-semibold">
@@ -112,15 +113,15 @@ export default function CombinedHUD() {
           </CardContent>
         </Card>
 
-        {/* 차트들 */}
+        {/* 차트 영역 (선택 시 표시) */}
         {selectedId && (
           <>
             {/* 2. 차종 분포 */}
             <Card 
               className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col"
               style={{ 
-                minHeight: '350px',  // 최소 높이 강제 (줄어들지 않음)
-                flexShrink: 0        // 공간이 부족해도 찌그러지지 않음
+                minHeight: '450px', // [수정] 높이를 350px -> 450px로 대폭 늘림
+                flexShrink: 0       // 절대 줄어들지 않게 고정
               }}
             >
               <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
@@ -137,22 +138,23 @@ export default function CombinedHUD() {
             <Card 
               className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col"
               style={{ 
-                minHeight: '350px',  // 최소 높이 강제
-                flexShrink: 0        // 찌그러짐 방지
+                minHeight: '500px', // [수정] 분석 표가 잘리지 않도록 500px로 넉넉하게 설정
+                flexShrink: 0       
               }}
             >
               <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
                 <CardTitle className="text-slate-100 text-sm font-medium">GEH 분석</CardTitle>
               </CardHeader>
               <CardContent className="p-2 flex-1 relative">
-                 <div className="absolute inset-0 p-2">
+                 <div className="absolute inset-0 p-2 overflow-auto"> {/* 내부 스크롤도 허용 */}
                     <GEHAnalysis trafficData={filteredTrafficData} />
                  </div>
               </CardContent>
             </Card>
 
-            {/* 스크롤 여유 공간 */}
-            <div style={{ height: '50px', flexShrink: 0 }}></div>
+            {/* 스크롤 바닥 여유 공간 (중요) */}
+            {/* 이것이 있어야 마지막 차트 밑부분이 바닥에 딱 붙지 않고 여유롭게 보입니다 */}
+            <div style={{ height: '100px', flexShrink: 0 }}></div>
           </>
         )}
       </div>
