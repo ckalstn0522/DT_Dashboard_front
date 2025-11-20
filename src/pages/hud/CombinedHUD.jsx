@@ -70,20 +70,20 @@ export default function CombinedHUD() {
         </Card>
       </div>
 
-      {/* [중앙 패널] 빈 공간 */}
+      {/* [중앙 패널] */}
       <div className="w-[50%] h-full pointer-events-none bg-transparent" />
 
       {/* [오른쪽 패널] 차트 & 정보 */}
       <div 
-        className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-3"
+        className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-4"
         style={{ 
           overflowY: 'auto',    // 세로 스크롤 활성화
           maxHeight: '100vh',   // 화면 높이 제한
-          scrollBehavior: 'smooth' // 부드러운 스크롤
+          scrollBehavior: 'smooth'
         }}
       >
         
-        {/* 1. 정보 카드 (항상 상단에 위치) */}
+        {/* 1. 정보 카드 */}
         <Card className="shrink-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
           <CardHeader className="pb-2 pt-4 px-4"> 
             <CardTitle className="text-slate-100 flex items-center gap-2 text-base font-semibold">
@@ -113,48 +113,33 @@ export default function CombinedHUD() {
           </CardContent>
         </Card>
 
-        {/* 차트 영역 (선택 시 표시) */}
+        {/* 차트 영역 */}
         {selectedId && (
           <>
             {/* 2. 차종 분포 */}
-            <Card 
-              className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col"
-              style={{ 
-                minHeight: '450px', // [수정] 높이를 350px -> 450px로 대폭 늘림
-                flexShrink: 0       // 절대 줄어들지 않게 고정
-              }}
-            >
-              <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
+            <Card className="shrink-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
+              <CardHeader className="py-3 px-4 border-b border-slate-700/30">
                 <CardTitle className="text-slate-100 text-sm font-medium">차종 분포</CardTitle>
               </CardHeader>
-              <CardContent className="p-2 flex-1 relative">
-                <div className="absolute inset-0 p-2">
-                    <VehicleTypeChart trafficData={filteredTrafficData} />
-                </div>
+              {/* [수정] absolute 제거하고 일반 패딩 사용. 내용물만큼 늘어남 */}
+              <CardContent className="p-2">
+                  <VehicleTypeChart trafficData={filteredTrafficData} />
               </CardContent>
             </Card>
             
             {/* 3. GEH 분석 */}
-            <Card 
-              className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden flex flex-col"
-              style={{ 
-                minHeight: '500px', // [수정] 분석 표가 잘리지 않도록 500px로 넉넉하게 설정
-                flexShrink: 0       
-              }}
-            >
-              <CardHeader className="py-3 px-4 border-b border-slate-700/30 shrink-0">
+            <Card className="shrink-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
+              <CardHeader className="py-3 px-4 border-b border-slate-700/30">
                 <CardTitle className="text-slate-100 text-sm font-medium">GEH 분석</CardTitle>
               </CardHeader>
-              <CardContent className="p-2 flex-1 relative">
-                 <div className="absolute inset-0 p-2 overflow-auto"> {/* 내부 스크롤도 허용 */}
-                    <GEHAnalysis trafficData={filteredTrafficData} />
-                 </div>
+              {/* [수정] absolute 제거 */}
+              <CardContent className="p-2">
+                  <GEHAnalysis trafficData={filteredTrafficData} />
               </CardContent>
             </Card>
 
-            {/* 스크롤 바닥 여유 공간 (중요) */}
-            {/* 이것이 있어야 마지막 차트 밑부분이 바닥에 딱 붙지 않고 여유롭게 보입니다 */}
-            <div style={{ height: '100px', flexShrink: 0 }}></div>
+            {/* 스크롤 바닥 여유 공간 */}
+            <div className="h-20 shrink-0"></div>
           </>
         )}
       </div>
