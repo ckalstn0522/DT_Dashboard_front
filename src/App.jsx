@@ -2,6 +2,9 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from "@/components/theme-provider";
+// ▼▼▼ [추가] FilterProvider 임포트 ▼▼▼
+import { FilterProvider } from "@/context/FilterContext";
+// ▲▲▲ [추가] ▲▲▲
 
 import Dashboard from './pages/Dashboard';
 import Layout from './Layout';
@@ -17,19 +20,21 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <BrowserRouter>
-          <Routes>
-            {/* 웹 브라우저용 (Layout 포함) */}
-            <Route path="/" element={<Layout><Dashboard /></Layout>} />
-            <Route path="/routeplanning" element={<Layout><RoutePlanning /></Layout>} />
-            <Route path="/comparison" element={<Layout><Comparison /></Layout>} />
+        {/* ▼▼▼ [수정] FilterProvider 적용 ▼▼▼ */}
+        <FilterProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Layout><Dashboard /></Layout>} />
+              <Route path="/routeplanning" element={<Layout><RoutePlanning /></Layout>} />
+              <Route path="/comparison" element={<Layout><Comparison /></Layout>} />
 
-            {/* Unity HUD용 (전체화면, Layout 없음) */}
-            <Route path="/hud" element={<CombinedHUD />} />
-            <Route path="/hud/left" element={<LeftMap />} />
-            <Route path="/hud/right" element={<RightCharts />} />
-          </Routes>
-        </BrowserRouter>
+              <Route path="/hud" element={<CombinedHUD />} />
+              <Route path="/hud/left" element={<LeftMap />} />
+              <Route path="/hud/right" element={<RightCharts />} />
+            </Routes>
+          </BrowserRouter>
+        </FilterProvider>
+        {/* ▲▲▲ [수정] ▲▲▲ */}
       </ThemeProvider>
     </QueryClientProvider>
   );

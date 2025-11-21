@@ -3,21 +3,29 @@ import axios from 'axios';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, Image as ImageIcon, BarChart2, Database, Filter, Target } from 'lucide-react';
+import { BarChart2, Database, Filter, Target } from 'lucide-react';
 
 import IntersectionMap from "../components/dashboard/IntersectionMap";
 import VehicleTypeChart from "../components/dashboard/VehicleTypeChart";
 import TrafficVolumeDisplay from "../components/dashboard/TrafficVolumeDisplay";
 import GEHAnalysis from "../components/dashboard/GEHAnalysis";
-import TimePeriodSelector from "../components/dashboard/TimePeriodSelector";
-import DateSelector from "../components/dashboard/DateSelector";
+// DateSelector, TimePeriodSelector 임포트 제거 (Layout으로 이동됨)
+// ▼▼▼ [추가] useFilter 임포트 ▼▼▼
+import { useFilter } from "@/context/FilterContext";
+// ▲▲▲ [추가] ▲▲▲
 
 const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 
 export default function Dashboard() {
   const [selectedIntersection, setSelectedIntersection] = useState(null);
-  const [timePeriod, setTimePeriod] = useState('all');
-  const [selectedDate, setSelectedDate] = useState('all');
+  
+  // ▼▼▼ [수정] Context에서 필터 상태 및 세터 가져오기 ▼▼▼
+  const { 
+    selectedDate, timePeriod, 
+    setAvailableDates, setAvailableTimePeriods, setIsSelectionEnabled,
+    setSelectedDate, setTimePeriod 
+  } = useFilter();
+  // ▲▲▲ [수정] ▲▲▲
 
   const { data: intersections, isLoading: isLoadingIntersections } = useQuery({
     queryKey: ['intersections'],
@@ -31,24 +39,32 @@ export default function Dashboard() {
     initialData: [],
   });
 
-  const { availableDates, availableTimePeriods } = useMemo(() => {
+  // ▼▼▼ [수정] 데이터 로드 시 사이드바 필터 옵션 업데이트 로직 ▼▼▼
+  useEffect(() => {
     if (!selectedIntersection) {
-      return { availableDates: [], availableTimePeriods: [] };
+      setAvailableDates([]);
+      setAvailableTimePeriods([]);
+      setIsSelectionEnabled(false);
+      return;
     }
+
     const intersectionData = allTrafficData.filter(
       data => String(data.intersection_id) === String(selectedIntersection.intersection_id)
     );
+    
     const dates = [...new Set(intersectionData.map(d => d.date).filter(Boolean))].sort();
     const times = [...new Set(intersectionData.map(d => d.time_period).filter(Boolean))].sort();
-    return { availableDates: dates, availableTimePeriods: times };
-  }, [selectedIntersection, allTrafficData]);
 
-  useEffect(() => {
-    if (selectedIntersection) {
-      setTimePeriod('all');
-      setSelectedDate('all');
-    }
-  }, [selectedIntersection?.intersection_id]);
+    setAvailableDates(dates);
+    setAvailableTimePeriods(times);
+    setIsSelectionEnabled(true);
+    
+    // 교차로 변경 시 필터 초기화
+    setSelectedDate('all');
+    setTimePeriod('all');
+
+  }, [selectedIntersection, allTrafficData, setAvailableDates, setAvailableTimePeriods, setIsSelectionEnabled, setSelectedDate, setTimePeriod]);
+  // ▲▲▲ [수정] ▲▲▲
 
   const filteredTrafficData = useMemo(() => {
     if (!selectedIntersection) return [];
@@ -62,7 +78,7 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-[1800px] mx-auto space-y-6">
-      {/* Header */}
+      {/* Header: 필터 카드가 제거되어 제목만 남음 */}
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
@@ -70,39 +86,8 @@ export default function Dashboard() {
           </h1>
           <p className="text-slate-600 dark:text-dashdark-muted mt-1">연구 범위 내 교차로 데이터 시각화</p>
         </div>
-        
-        {/* 필터 카드 */}
-        <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-md relative z-20">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-              <DateSelector 
-                value={selectedDate} 
-                onChange={setSelectedDate}
-                availableDates={availableDates}
-                disabled={!selectedIntersection}
-              />
-              <div className="h-8 w-px bg-slate-300 dark:bg-slate-700 hidden md:block" />
-              <TimePeriodSelector 
-                value={timePeriod} 
-                onChange={setTimePeriod}
-                availableTimePeriods={availableTimePeriods}
-                disabled={!selectedIntersection}
-              />
-            </div>
-            {selectedIntersection && (
-              <div className="mt-3 p-2 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800/50">
-                <div className="text-xs text-violet-700 dark:text-violet-300">
-                  💡 <strong>{selectedIntersection.intersection_name}</strong>에서 사용 가능: 
-                  <strong> {availableDates.length}일</strong>, 
-                  <strong> {availableTimePeriods.length}개 시간대</strong>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* 기존 필터 카드 제거됨 (사이드바 이동) */}
       </div>
-
-      {/* 기존 Alert 패널 제거됨 */}
 
       {/* 메인 레이아웃 */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 relative z-0">
@@ -114,10 +99,8 @@ export default function Dashboard() {
               <CardTitle className="text-slate-900 dark:text-white">연구 범위 맵</CardTitle>
             </CardHeader>
             
-            {/* ▼▼▼ [수정] 카드 내부 레이아웃: 지도와 통계 정보를 세로로 배치 ▼▼▼ */}
             <CardContent className="p-0 flex flex-col flex-1">
-              
-              {/* 지도 영역 (높이 조정) */}
+              {/* 지도 영역 */}
               <div className="relative h-[550px] w-full shrink-0">
                 {isLoadingIntersections ? (
                   <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-dashdark-bg">
@@ -132,7 +115,7 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* ▼▼▼ [추가] 하단 통계 정보 (요청하신 빨간 네모 영역) ▼▼▼ */}
+              {/* 하단 통계 정보 */}
               <div className="flex-1 p-5 bg-slate-50 dark:bg-dashdark-sidebar/50 border-t border-slate-200 dark:border-dashdark-border">
                 <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">데이터 요약</h4>
                 <div className="space-y-3">
@@ -187,7 +170,6 @@ export default function Dashboard() {
 
                 </div>
               </div>
-              {/* ▲▲▲ [추가 완료] ▲▲▲ */}
 
             </CardContent>
           </Card>
