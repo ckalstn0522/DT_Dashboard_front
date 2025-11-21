@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 import axios from 'axios';
 import { useQuery } from "@tanstack/react-query";
-import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
+// ▼▼▼ [수정] useMap 추가 임포트 ▼▼▼
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
+// ▲▲▲ [수정] ▲▲▲
 import L from 'leaflet';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Route, Clock, Trash2, MapPin, Loader2 } from 'lucide-react';
+// ▼▼▼ [수정] Lock, Unlock 아이콘 추가 임포트 ▼▼▼
+import { Route, Clock, Trash2, MapPin, Loader2, Lock, Unlock } from 'lucide-react';
+// ▲▲▲ [수정] ▲▲▲
 import 'leaflet/dist/leaflet.css';
 
 const API_URL = 'https://dt-dashboard-back.onrender.com/api';
@@ -34,10 +38,48 @@ const selectedIcon = new L.Icon({
   iconAnchor: [20, 20],
 });
 
+// ▼▼▼ [추가] 스크롤 줌 제어 컴포넌트 ▼▼▼
+function ScrollWheelControl({ isLocked, onToggle }) {
+  const map = useMap();
+  
+  React.useEffect(() => {
+    if (isLocked) {
+      map.scrollWheelZoom.disable();
+    } else {
+      map.scrollWheelZoom.enable();
+    }
+  }, [isLocked, map]);
+
+  return (
+    <div className="leaflet-top leaflet-right" style={{ marginTop: '80px', marginRight: '10px' }}>
+      <div className="leaflet-control leaflet-bar">
+        <Button
+          onClick={onToggle}
+          size="sm"
+          variant={isLocked ? "default" : "secondary"}
+          className={`w-10 h-10 p-0 rounded-md shadow-lg border-0 ${
+            isLocked 
+              ? 'bg-red-500 hover:bg-red-600 text-white' 
+              : 'bg-white dark:bg-dashdark-card hover:bg-slate-100 dark:hover:bg-dashdark-hover text-slate-700 dark:text-white'
+          }`}
+          title={isLocked ? "스크롤 확대/축소 잠김" : "스크롤 확대/축소 활성화"}
+        >
+          {isLocked ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
+        </Button>
+      </div>
+    </div>
+  );
+}
+// ▲▲▲ [추가] ▲▲▲
+
 export default function RoutePlanning() {
   const [selectedIntersections, setSelectedIntersections] = useState([]);
   const [routes, setRoutes] = useState([]);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  
+  // ▼▼▼ [추가] 스크롤 잠금 상태 (기본값: 잠김) ▼▼▼
+  const [isScrollLocked, setIsScrollLocked] = useState(true);
+  // ▲▲▲ [추가] ▲▲▲
 
   const { data: intersections, isLoading } = useQuery({
     queryKey: ['intersections'],
@@ -45,11 +87,6 @@ export default function RoutePlanning() {
     initialData: [],
   });
 
-  const bounds = [
-    [36.640140, 126.663909],
-    [36.673372, 126.687575]
-  ];
-  
   const center = [
     (36.640140 + 36.673372) / 2,
     (126.663909 + 126.687575) / 2
@@ -185,7 +222,14 @@ export default function RoutePlanning() {
                 {isLoading ? (
                   <Skeleton className="w-full h-full bg-slate-200 dark:bg-dashdark-bg" />
                 ) : (
-                  <MapContainer center={center} zoom={14} style={{ height: '100%', width: '100%' }}>
+                  <MapContainer 
+                    center={center} 
+                    zoom={14} 
+                    style={{ height: '100%', width: '100%' }}
+                    // ▼▼▼ [수정] 스크롤 줌 제어 연결 ▼▼▼
+                    scrollWheelZoom={!isScrollLocked}
+                    // ▲▲▲ [수정] ▲▲▲
+                  >
                     <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     {intersections.map((intersection) => (
                       <Marker
@@ -202,6 +246,13 @@ export default function RoutePlanning() {
                         pathOptions={{ color: 'rgb(139, 92, 246)', weight: 5, opacity: 0.9 }}
                       />
                     ))}
+                    
+                    {/* ▼▼▼ [추가] 스크롤 제어 버튼 배치 ▼▼▼ */}
+                    <ScrollWheelControl 
+                      isLocked={isScrollLocked} 
+                      onToggle={() => setIsScrollLocked(!isScrollLocked)} 
+                    />
+                    {/* ▲▲▲ [추가] ▲▲▲ */}
                   </MapContainer>
                 )}
               </div>

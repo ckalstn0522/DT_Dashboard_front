@@ -3,8 +3,7 @@ import axios from 'axios';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, Image as ImageIcon, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Building2, Image as ImageIcon, BarChart2, Database, Filter, Target } from 'lucide-react';
 
 import IntersectionMap from "../components/dashboard/IntersectionMap";
 import VehicleTypeChart from "../components/dashboard/VehicleTypeChart";
@@ -103,35 +102,23 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* 정보 패널 */}
-      <Alert className="bg-slate-50 dark:bg-dashdark-card border-slate-300 dark:border-dashdark-border relative z-10">
-        <AlertCircle className="h-4 w-4 dark:text-dashdark-text" />
-        <AlertDescription className="dark:text-dashdark-text">
-          <div className="text-xs space-y-1">
-            <div>📊 <strong>총 교차로:</strong> {intersections.length}개</div>
-            <div>📊 <strong>총 교통 데이터:</strong> {allTrafficData.length}개</div>
-            <div>✅ <strong>필터링된 데이터:</strong> {filteredTrafficData.length}개</div>
-            {selectedIntersection && (
-              <>
-                <div>🎯 <strong>선택된 교차로 ID:</strong> {selectedIntersection.intersection_id}</div>
-                <div>📅 <strong>사용 가능한 날짜:</strong> {availableDates.join(', ') || '없음'}</div>
-                <div>⏰ <strong>사용 가능한 시간대:</strong> {availableTimePeriods.length}개</div>
-              </>
-            )}
-          </div>
-        </AlertDescription>
-      </Alert>
+      {/* 기존 Alert 패널 제거됨 */}
 
-      {/* 메인 레이아웃(지도) */}
+      {/* 메인 레이아웃 */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 relative z-0">
-        {/* Map Section */}
-        <div className="xl:col-span-2 space-y-6">
-          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg overflow-hidden">
-            <CardHeader className="bg-slate-50 dark:bg-dashdark-sidebar border-b border-slate-100 dark:border-dashdark-border">
+        
+        {/* 1. Map Section + Stats Info */}
+        <div className="xl:col-span-1 space-y-6">
+          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg overflow-hidden h-full flex flex-col">
+            <CardHeader className="bg-slate-50 dark:bg-dashdark-sidebar border-b border-slate-100 dark:border-dashdark-border shrink-0">
               <CardTitle className="text-slate-900 dark:text-white">연구 범위 맵</CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[600px]">
+            
+            {/* ▼▼▼ [수정] 카드 내부 레이아웃: 지도와 통계 정보를 세로로 배치 ▼▼▼ */}
+            <CardContent className="p-0 flex flex-col flex-1">
+              
+              {/* 지도 영역 (높이 조정) */}
+              <div className="relative h-[550px] w-full shrink-0">
                 {isLoadingIntersections ? (
                   <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-dashdark-bg">
                     <div className="text-slate-400">지도 데이터를 불러오는 중...</div>
@@ -144,98 +131,77 @@ export default function Dashboard() {
                   />
                 )}
               </div>
+
+              {/* ▼▼▼ [추가] 하단 통계 정보 (요청하신 빨간 네모 영역) ▼▼▼ */}
+              <div className="flex-1 p-5 bg-slate-50 dark:bg-dashdark-sidebar/50 border-t border-slate-200 dark:border-dashdark-border">
+                <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">데이터 요약</h4>
+                <div className="space-y-3">
+                  
+                  <div className="flex items-center justify-between p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-md">
+                        <BarChart2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <span className="text-sm font-medium text-slate-600 dark:text-dashdark-muted">총 교차로</span>
+                    </div>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">
+                      {intersections.length}개
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-violet-100 dark:bg-violet-900/30 rounded-md">
+                        <Database className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                      </div>
+                      <span className="text-sm font-medium text-slate-600 dark:text-dashdark-muted">총 교통 데이터</span>
+                    </div>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">
+                      {allTrafficData.length}개
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-md">
+                        <Filter className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <span className="text-sm font-medium text-slate-600 dark:text-dashdark-muted">필터링된 데이터</span>
+                    </div>
+                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                      {filteredTrafficData.length}개
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-md">
+                        <Target className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <span className="text-sm font-medium text-slate-600 dark:text-dashdark-muted">선택된 교차로 ID</span>
+                    </div>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">
+                      {selectedIntersection ? selectedIntersection.intersection_id : '-'}
+                    </span>
+                  </div>
+
+                </div>
+              </div>
+              {/* ▲▲▲ [추가 완료] ▲▲▲ */}
+
             </CardContent>
           </Card>
+        </div>
 
+        {/* 2. Charts Section */}
+        <div className="xl:col-span-2 space-y-6">
+          <VehicleTypeChart trafficData={filteredTrafficData} />
           <GEHAnalysis trafficData={filteredTrafficData} />
         </div>
 
-        {/* Right Panel */}
-        <div className="space-y-6">
-          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
-            <CardHeader className="border-b border-slate-100 dark:border-dashdark-border pb-4">
-              <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                선택된 교차로
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              {selectedIntersection ? (
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-                      {selectedIntersection.intersection_name}
-                    </div>
-                    <div className="text-sm text-slate-600 dark:text-dashdark-muted">
-                      교차로 번호: {selectedIntersection.intersection_id}
-                    </div>
-                    <div className="text-sm text-slate-600 dark:text-dashdark-muted">
-                      신호 페이즈: {selectedIntersection.phase_count || 'N/A'}개
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-500 mt-2">
-                      위도: {selectedIntersection.latitude?.toFixed(6)}° / 
-                      경도: {selectedIntersection.longitude?.toFixed(6)}°
-                    </div>
-                  </div>
-
-                  {selectedIntersection.intersection_image && (
-                    <div className="relative bg-slate-100 dark:bg-dashdark-bg rounded-lg p-2">
-                      <img
-                        src={selectedIntersection.intersection_image}
-                        alt={selectedIntersection.intersection_name}
-                        className="w-full h-48 object-contain rounded-lg"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  <div className="pt-4 border-t border-slate-200 dark:border-dashdark-border">
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-slate-600 dark:text-dashdark-muted">선택된 날짜:</span>
-                        <span className="font-semibold text-slate-900 dark:text-white">
-                          {selectedDate === 'all' ? '전체' : selectedDate}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600 dark:text-dashdark-muted">선택된 시간대:</span>
-                        <span className="font-semibold text-slate-900 dark:text-white">
-                          {timePeriod === 'all' ? '전체' : timePeriod}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600 dark:text-dashdark-muted">데이터 개수:</span>
-                        <span className={`font-semibold ${filteredTrafficData.length > 0 ? 'text-violet-600 dark:text-violet-400' : 'text-red-600'}`}>
-                          {filteredTrafficData.length}개
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {filteredTrafficData.length === 0 && (
-                    <Alert>
-                      <AlertCircle className="h-4 w-4 dark:text-dashdark-text" />
-                      <AlertDescription className="text-xs dark:text-dashdark-text">
-                        선택한 필터에 해당하는 데이터가 없습니다.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-slate-400 dark:text-slate-600">
-                  <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>지도에서 교차로를 선택해주세요</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <VehicleTypeChart trafficData={filteredTrafficData} />
-        </div>
       </div>
 
+      {/* 3. Traffic Volume */}
       <TrafficVolumeDisplay 
         trafficData={filteredTrafficData}
         intersectionImage={selectedIntersection?.intersection_image}

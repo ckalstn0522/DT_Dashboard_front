@@ -83,9 +83,17 @@ export default function VehicleTypeChart({ trafficData }) {
                 <Cell key={`cell-${index}`} fill={COLORS[entry.name]} />
               ))}
             </Pie>
+            {/* ▼▼▼ [수정] 툴팁 스타일: 흰색 배경에 검은 글씨로 변경하여 가독성 확보 ▼▼▼ */}
             <Tooltip 
               formatter={(value) => value.toLocaleString() + '대'} 
-              contentStyle={{ backgroundColor: '#1E2330', borderColor: '#2A303F', color: '#fff' }}
+              contentStyle={{ 
+                backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                borderColor: '#e2e8f0', 
+                borderRadius: '8px',
+                color: '#1e293b',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+              itemStyle={{ color: '#1e293b' }}
             />
             <Legend />
           </PieChart>

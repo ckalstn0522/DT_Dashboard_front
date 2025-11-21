@@ -28,7 +28,6 @@ export default function Layout({ children }) {
 
   return (
     <SidebarProvider>
-      {/* [중요] 웹 페이지 배경색 지정: 투명도 문제 해결 */}
       <div className="min-h-screen flex w-full bg-slate-50 dark:bg-dashdark-bg transition-colors duration-300">
         
         <Sidebar className="hidden md:flex border-r border-slate-200 dark:border-dashdark-border bg-white dark:bg-dashdark-sidebar">
@@ -99,7 +98,7 @@ export default function Layout({ children }) {
         </Sidebar>
 
         <main className="flex-1 flex flex-col overflow-hidden h-screen">
-          <header className="bg-white/80 dark:bg-dashdark-sidebar/80 backdrop-blur-md border-b border-slate-200 dark:border-dashdark-border px-6 py-4 md:hidden shadow-sm flex justify-between items-center">
+          <header className="bg-white/80 dark:bg-dashdark-sidebar/80 backdrop-blur-md border-b border-slate-200 dark:border-dashdark-border px-6 py-4 md:hidden shadow-sm flex justify-between items-center shrink-0">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="hover:bg-slate-100 dark:hover:bg-dashdark-hover p-2 rounded-lg transition-colors duration-200 dark:text-dashdark-text" />
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">

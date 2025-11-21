@@ -14,6 +14,27 @@ const calculateGEH = (simulated, observed) => {
   return Math.sqrt((2 * Math.pow(simulated - observed, 2)) / (simulated + observed));
 };
 
+// 파이 차트 내부 라벨 위치 계산 함수
+const RADIAN = Math.PI / 180;
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, value }) => {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text 
+      x={x} 
+      y={y} 
+      fill="white" 
+      textAnchor="middle" 
+      dominantBaseline="central" 
+      className="text-xs font-bold drop-shadow-md"
+    >
+      {value}
+    </text>
+  );
+};
+
 export default function GEHAnalysis({ trafficData }) {
   if (!trafficData || trafficData.length === 0) {
     return (
@@ -80,7 +101,7 @@ export default function GEHAnalysis({ trafficData }) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ value }) => `${value}`}
+                label={renderCustomizedLabel} 
                 outerRadius={70}
                 fill="#8884d8"
                 dataKey="value"
@@ -90,7 +111,17 @@ export default function GEHAnalysis({ trafficData }) {
                   <Cell key={`cell-${index}`} fill={GEH_COLORS[entry.name]} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{ backgroundColor: '#1E2330', borderColor: '#2A303F', color: '#fff' }} />
+              {/* ▼▼▼ [수정] 툴팁 스타일: 배경색을 밝게, 텍스트를 어둡게 수정 (다크모드 대응 클래스 추가 안됨 - 인라인 스타일 우선) ▼▼▼ */}
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                  borderColor: '#e2e8f0', 
+                  borderRadius: '8px',
+                  color: '#1e293b',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }} 
+                itemStyle={{ color: '#1e293b' }} // 텍스트 색상 강제 지정
+              />
               <Legend wrapperStyle={{ fontSize: '11px' }} />
             </PieChart>
           </ResponsiveContainer>
@@ -149,9 +180,17 @@ export default function GEHAnalysis({ trafficData }) {
                 axisLine={{ stroke: '#475569' }}
                 tickLine={false}
               />
+              {/* ▼▼▼ [수정] ScatterChart 툴팁 스타일도 동일하게 적용 ▼▼▼ */}
               <Tooltip 
                 cursor={{ strokeDasharray: '3 3' }} 
-                contentStyle={{ backgroundColor: '#1E2330', borderColor: '#2A303F', color: '#fff' }}
+                contentStyle={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                  borderColor: '#e2e8f0', 
+                  borderRadius: '8px',
+                  color: '#1e293b',
+                  fontSize: '12px'
+                }}
+                itemStyle={{ color: '#1e293b' }}
               />
               <Scatter 
                 data={gehData} 
