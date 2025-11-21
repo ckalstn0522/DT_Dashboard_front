@@ -11,6 +11,7 @@ import GEHAnalysis from "../../components/dashboard/GEHAnalysis";
 
 const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 
+// ▼▼▼ [수정] HUD 카드 공통 스타일 (GEH 카드와 동일하게) ▼▼▼
 const hudCardStyle = "bg-slate-950/90 backdrop-blur-md border-slate-800/80 shadow-2xl";
 
 export default function CombinedHUD() {
@@ -63,6 +64,8 @@ export default function CombinedHUD() {
       
       {/* [왼쪽 패널] 지도(85%) + 정보(15%) */}
       <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-3">
+        
+        {/* 1. 지도 카드 */}
         <Card className={`h-[85%] w-full overflow-hidden ${hudCardStyle}`}>
           <CardContent className="p-0 h-full relative">
             <div className="h-full w-full absolute inset-0">
@@ -75,6 +78,7 @@ export default function CombinedHUD() {
           </CardContent>
         </Card>
 
+        {/* 2. 정보 카드 */}
         <Card className={`h-[15%] w-full flex flex-col justify-center overflow-hidden ${hudCardStyle}`}>
           <CardHeader className="py-2 px-4 min-h-0 shrink-0"> 
             <CardTitle className="text-slate-100 flex items-center gap-2 text-sm font-semibold">
@@ -123,30 +127,25 @@ export default function CombinedHUD() {
       >
         {selectedId && (
           <>
-            {/* 1. 차종 분포: 40% 높이 (약간 늘림) */}
-            <Card className={`h-[40%] w-full shrink-0 overflow-hidden ${hudCardStyle}`}>
-              <CardHeader className="py-2 px-4 border-b border-slate-800/50 shrink-0">
-                <CardTitle className="text-slate-100 text-sm font-medium">차종 분포</CardTitle>
-              </CardHeader>
+            {/* 1. 차종 분포 (높이 45%) */}
+            {/* ▼▼▼ [수정] hudCardStyle 적용하여 배경색 통일 ▼▼▼ */}
+            <Card className={`h-[45%] w-full shrink-0 overflow-hidden ${hudCardStyle}`}>
+              {/* 헤더를 직접 그리지 않고 VehicleTypeChart에 compact 모드로 위임할 수도 있지만,
+                  여기서는 통일감을 위해 CardHeader는 제거하고 내부 컴포넌트만 렌더링 */}
               <CardContent className="p-0 h-full">
-                  <div className="h-full pb-8"> 
-                    <VehicleTypeChart trafficData={filteredTrafficData} compact={true} />
-                  </div>
+                  <VehicleTypeChart trafficData={filteredTrafficData} compact={true} />
               </CardContent>
             </Card>
             
-            {/* 2. GEH 분석: 55% -> 60%로 늘려 하단 채움 */}
-            {/* ▼▼▼ [수정] 높이 비율 조정 (남은 공간 꽉 채우도록 flex-1도 가능하지만 비율 조정으로 맞춤) ▼▼▼ */}
-            <Card className={`flex-1 w-full shrink-0 overflow-hidden ${hudCardStyle}`}>
+            {/* 2. GEH 분석 (높이 50%) */}
+            <Card className={`h-[50%] w-full shrink-0 overflow-hidden ${hudCardStyle}`}>
                <CardContent className="p-0 h-full">
-                  <div className="h-full pb-4">
-                    <GEHAnalysis trafficData={filteredTrafficData} compact={true} />
-                  </div>
+                  <GEHAnalysis trafficData={filteredTrafficData} compact={true} />
                </CardContent>
             </Card>
 
-            {/* 하단 여백 최소화 */}
-            <div className="h-2 shrink-0"></div>
+            {/* 하단 여백 */}
+            <div className="h-5 shrink-0"></div>
           </>
         )}
       </div>

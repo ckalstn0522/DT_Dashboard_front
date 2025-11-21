@@ -71,12 +71,12 @@ export default function Dashboard() {
   }, [selectedIntersection, allTrafficData, timePeriod, selectedDate]);
 
   return (
-    <div className="max-w-[1800px] mx-auto space-y-3 h-[calc(100vh-4rem)] flex flex-col p-2">
+    <div className="max-w-[1800px] mx-auto space-y-4 h-[calc(100vh-4rem)] flex flex-col p-2">
       
       {/* [모달] 방향별 교통량 상세 보기 */}
       {isTrafficVolumeOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          {/* 모달 컨테이너: 최대 너비/높이 제한 */}
+          {/* 모달 컨테이너 */}
           <div className="bg-white dark:bg-dashdark-bg w-full h-full max-w-6xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-dashdark-border relative">
             
             {/* 모달 헤더 */}
@@ -97,45 +97,42 @@ export default function Dashboard() {
               </Button>
             </div>
             
-            {/* 모달 콘텐츠: 오직 TrafficVolumeDisplay만 렌더링 (지도 없음!) */}
+            {/* ▼▼▼ [수정] 모달 콘텐츠: 지도 없음! 오직 TrafficVolumeDisplay만 전체 화면으로 표시 ▼▼▼ */}
             <div className="flex-1 p-0 bg-slate-100 dark:bg-dashdark-bg/50 relative overflow-hidden">
                <TrafficVolumeDisplay 
                  trafficData={filteredTrafficData}
-                 // ▼▼▼ [핵심] 모달에서는 배경 지도 이미지도 안 보이게 null 처리 ▼▼▼
                  intersectionImage={null} 
-                 // ▲▲▲ [핵심] ▲▲▲
                />
             </div>
+            {/* ▲▲▲ [수정] ▲▲▲ */}
+            
           </div>
         </div>
       )}
 
-      {/* Header & Top Bar */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row gap-3 justify-between items-end md:items-center shrink-0">
-        <div>
+        <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <LayoutDashboard className="w-6 h-6 text-violet-500" />
             교통 데이터 대시보드
           </h1>
         </div>
 
-        {/* 상단바: 방향별 교통량 바로가기 */}
-        <Card className="flex items-center gap-4 p-2 px-4 bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => setIsTrafficVolumeOpen(true)}>
-          <div className="flex items-center gap-3">
-             <div className="p-1.5 bg-violet-100 dark:bg-violet-900/20 rounded-md">
-               <Navigation className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-             </div>
-             <div className="flex flex-col">
-               <span className="text-xs font-bold text-slate-900 dark:text-white">방향별 교통량</span>
-               <span className="text-[10px] text-slate-500 dark:text-dashdark-muted">클릭하여 상세 보기</span>
-             </div>
-          </div>
-          <Maximize2 className="w-4 h-4 text-slate-400 dark:text-slate-600" />
-        </Card>
+        {/* 우측 상단 버튼: 방향별 교통량 상세 보기 */}
+        <Button 
+          variant="outline"
+          onClick={() => setIsTrafficVolumeOpen(true)}
+          className="flex items-center gap-2 bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border text-slate-700 dark:text-white shadow-sm hover:bg-slate-50 dark:hover:bg-dashdark-hover"
+        >
+          <Navigation className="w-4 h-4 text-violet-500" />
+          <span className="text-sm font-semibold">방향별 교통량</span>
+          <Maximize2 className="w-3 h-3 ml-1 text-slate-400" />
+        </Button>
       </div>
 
       {/* Main Layout Grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-0">
         
         {/* [Left Column] 연구 범위 맵 */}
         <div className="lg:col-span-4 flex flex-col h-full min-h-0">
@@ -159,8 +156,8 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* [Right Column] 통계 및 차트 */}
-        <div className="lg:col-span-8 flex flex-col gap-3 h-full min-h-0">
+        {/* [Right Column] 통계 및 차트들 */}
+        <div className="lg:col-span-8 flex flex-col gap-4 h-full min-h-0">
           
           {/* 1. 데이터 요약 */}
           <div className="grid grid-cols-4 gap-3 shrink-0">
@@ -191,12 +188,12 @@ export default function Dashboard() {
           </div>
 
           {/* 2. 차종 분포 */}
-          <div className="flex-[2] min-h-0">
+          <div className="flex-[3] min-h-0">
              <VehicleTypeChart trafficData={filteredTrafficData} />
           </div>
 
           {/* 3. GEH 분석 & R^2 */}
-          <div className="flex-1 min-h-[240px]">
+          <div className="flex-[2] min-h-[220px]">
              <GEHAnalysis trafficData={filteredTrafficData} />
           </div>
 
