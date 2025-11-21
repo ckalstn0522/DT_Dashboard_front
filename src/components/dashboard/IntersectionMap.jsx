@@ -5,7 +5,6 @@ import L from 'leaflet';
 import { Button } from "@/components/ui/button";
 import { Lock, Unlock } from 'lucide-react';
 
-// 커스텀 마커 아이콘 생성 함수 (기존 동일)
 const createCustomIcon = (isSelected = false) => {
   const iconHtml = isSelected 
     ? `<div style="background-color: rgb(139, 92, 246); width: 32px; height: 32px; border-radius: 50%; border: 4px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
@@ -23,7 +22,6 @@ const createCustomIcon = (isSelected = false) => {
   });
 };
 
-// 스크롤 줌 제어 버튼 (기존 동일)
 function ScrollWheelControl({ isLocked, onToggle }) {
   const map = useMap();
   
@@ -59,9 +57,8 @@ function ScrollWheelControl({ isLocked, onToggle }) {
 export default function IntersectionMap({ intersections, onSelectIntersection, selectedIntersectionId }) {
   const [isScrollLocked, setIsScrollLocked] = useState(true);
 
-  // ▼▼▼ [수정] 중심 좌표 조정: 왼쪽으로 치우친 문제를 해결하기 위해 경도(Longitude)를 약간 동쪽(오른쪽)으로 이동
-  // 기존: [36.6565, 126.676] -> 수정: [36.6565, 126.6785] (세로형 맵에 맞춰 조정)
-  const center = [36.6565, 126.6785]; 
+  // ▼▼▼ [수정] 중심 좌표를 연구 범위의 정중앙으로 재설정 ▼▼▼
+  const center = [36.6565, 126.676]; 
   
   const bounds = [
     [36.640, 126.664], 
@@ -71,10 +68,9 @@ export default function IntersectionMap({ intersections, onSelectIntersection, s
   return (
     <MapContainer
       center={center}
-      // ▼▼▼ [수정] 줌 레벨 조정: 14 -> 13 (범위가 좁아졌으므로 조금 더 넓게 보이도록 축소)
+      // ▼▼▼ [수정] 줌 레벨 1단계 상승 (13 -> 14) ▼▼▼
       zoom={14} 
       style={{ height: '100%', width: '100%' }}
-      // maxBounds={bounds} // 필요하다면 주석 해제하여 이동 범위 제한
       maxBoundsViscosity={1.0}
       scrollWheelZoom={!isScrollLocked}
     >
@@ -86,7 +82,7 @@ export default function IntersectionMap({ intersections, onSelectIntersection, s
       <Rectangle
         bounds={bounds}
         pathOptions={{
-          color: 'rgb(139, 92, 246)', // 보라색 테마 적용
+          color: 'rgb(139, 92, 246)',
           weight: 3,
           fillOpacity: 0.05,
           dashArray: '10, 10'

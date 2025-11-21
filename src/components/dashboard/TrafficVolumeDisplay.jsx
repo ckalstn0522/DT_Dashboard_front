@@ -27,15 +27,8 @@ const directionConfig = {
 export default function TrafficVolumeDisplay({ trafficData, intersectionImage }) {
   if (!trafficData || trafficData.length === 0) {
     return (
-      <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-white">방향별 교통량</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-96 flex items-center justify-center text-slate-400 dark:text-slate-600">
-            교차로를 선택해주세요
-          </div>
-        </CardContent>
+      <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm h-full flex justify-center items-center">
+        <div className="text-slate-400 dark:text-slate-600 text-sm">교차로를 선택해주세요</div>
       </Card>
     );
   }
@@ -43,9 +36,7 @@ export default function TrafficVolumeDisplay({ trafficData, intersectionImage })
   const aggregatedData = {};
   trafficData.forEach(data => {
     const dir = data.direction_eng;
-    if (!aggregatedData[dir]) {
-      aggregatedData[dir] = { vehs: 0, actual: 0, direction: dir };
-    }
+    if (!aggregatedData[dir]) aggregatedData[dir] = { vehs: 0, actual: 0, direction: dir };
     aggregatedData[dir].vehs += data.vehs || 0;
     aggregatedData[dir].actual += data.소계_대 || 0;
   });
@@ -60,117 +51,59 @@ export default function TrafficVolumeDisplay({ trafficData, intersectionImage })
   });
 
   const DirectionArrow = ({ data, isHorizontal = false }) => (
-    <div className={`flex ${isHorizontal ? 'flex-col items-center' : 'flex-row items-center'} gap-3 p-4 bg-white dark:bg-dashdark-sidebar rounded-xl border-2 border-slate-200 dark:border-dashdark-border hover:border-violet-400 dark:hover:border-violet-500 transition-all hover:shadow-lg min-w-[150px]`}>
-      <div 
-        className="p-3 rounded-lg flex-shrink-0"
-        style={{ backgroundColor: data.color + '20' }}
-      >
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={data.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <div className={`flex ${isHorizontal ? 'flex-col items-center' : 'flex-row items-center'} gap-2 p-2 bg-white dark:bg-dashdark-sidebar rounded border border-slate-200 dark:border-dashdark-border hover:border-violet-400 dark:hover:border-violet-500 transition-all shadow-sm min-w-[100px]`}>
+      <div className="p-1.5 rounded flex-shrink-0" style={{ backgroundColor: data.color + '20' }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={data.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d={ArrowIcons[data.arrow]} />
         </svg>
       </div>
       <div className={`flex-1 min-w-0 ${isHorizontal ? 'text-center' : ''}`}>
-        <div className="text-sm font-bold text-slate-800 dark:text-white mb-1">{data.turnType}</div>
-        <div className="text-xs text-slate-500 dark:text-dashdark-muted mb-2">({data.label})</div>
-        <div className={`grid ${isHorizontal ? 'grid-cols-1' : 'grid-cols-2'} gap-2 text-xs`}>
-          <div>
-            <span className="text-slate-500 dark:text-slate-400">시뮬</span>
-            <div className="font-bold text-cyan-600 dark:text-cyan-400">{data.vehs.toLocaleString()}</div>
-          </div>
-          <div>
-            <span className="text-slate-500 dark:text-slate-400">실제</span>
-            <div className="font-bold text-indigo-600 dark:text-indigo-400">{data.actual.toLocaleString()}</div>
-          </div>
+        <div className="text-xs font-bold text-slate-800 dark:text-white">{data.turnType}</div>
+        <div className="grid grid-cols-1 gap-0.5 text-[10px]">
+          <div><span className="text-slate-500 dark:text-slate-400">시뮬 </span><span className="font-bold text-cyan-600 dark:text-cyan-400">{data.vehs.toLocaleString()}</span></div>
+          <div><span className="text-slate-500 dark:text-slate-400">실제 </span><span className="font-bold text-indigo-600 dark:text-indigo-400">{data.actual.toLocaleString()}</span></div>
         </div>
       </div>
     </div>
   );
 
   return (
-    <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2">
-          <Navigation className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+    <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm h-full flex flex-col">
+      <CardHeader className="py-3 px-4 border-b border-slate-100 dark:border-dashdark-border shrink-0">
+        <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <Navigation className="w-4 h-4 text-violet-500" />
           방향별 교통량 (사거리 형태)
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0 relative flex-1 overflow-hidden">
         {intersectionImage && (
-          <div className="mb-6 relative">
-            <img 
-              src={intersectionImage} 
-              alt="교차로" 
-              className="w-full h-64 object-cover rounded-lg shadow-md"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
+          <div className="absolute inset-0 z-0 opacity-10 dark:opacity-20 pointer-events-none">
+            <img src={intersectionImage} alt="교차로" className="w-full h-full object-cover" />
           </div>
         )}
 
-        {/* 사거리 레이아웃 */}
-        <div className="relative bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 rounded-3xl p-12 border border-slate-200 dark:border-dashdark-border">
-          {/* 도로 표시 - 수직 (다크 모드: 어두운 도로) */}
-          <div className="absolute top-0 bottom-0 left-1/2 transform -translate-x-1/2 w-32 bg-slate-300 dark:bg-slate-800">
-            <div className="absolute top-0 bottom-0 left-1/2 w-1 border-l-4 border-dashed border-white/50 dark:border-slate-600" />
+        <div className="relative w-full h-full bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 flex justify-center items-center">
+          <div className="absolute top-0 bottom-0 left-1/2 w-20 bg-slate-200 dark:bg-slate-800 -translate-x-1/2 flex flex-col justify-center">
+             <div className="h-full border-l-2 border-dashed border-white/50 dark:border-slate-600 mx-auto"></div>
           </div>
-          
-          {/* 도로 표시 - 수평 */}
-          <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 h-32 bg-slate-300 dark:bg-slate-800">
-            <div className="absolute left-0 right-0 top-1/2 h-1 border-t-4 border-dashed border-white/50 dark:border-slate-600" />
+          <div className="absolute left-0 right-0 top-1/2 h-20 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 flex flex-col justify-center">
+             <div className="w-full border-t-2 border-dashed border-white/50 dark:border-slate-600 my-auto"></div>
           </div>
-
-          {/* 중앙 교차로 */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-gradient-to-br from-amber-400 via-amber-300 to-amber-400 rounded-2xl shadow-2xl flex items-center justify-center border-4 border-white dark:border-slate-700 z-10">
-            <div className="text-white text-center">
-              <div className="text-3xl font-bold mb-1">🚦</div>
-              <div className="text-xs font-bold bg-white/30 px-2 py-1 rounded backdrop-blur-sm">교차로</div>
-            </div>
+          <div className="absolute z-10 w-16 h-16 bg-amber-400 rounded-lg shadow-lg flex items-center justify-center border-2 border-white dark:border-slate-700">
+            <span className="text-2xl">🚦</span>
           </div>
 
-          <div className="absolute top-8 left-1/2 transform -translate-x-1/2 flex gap-3 z-20">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
             {groupedByPosition.top.map(data => <DirectionArrow key={data.direction} data={data} isHorizontal={true} />)}
           </div>
-          <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex flex-col gap-3 z-20">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20">
             {groupedByPosition.right.map(data => <DirectionArrow key={data.direction} data={data} isHorizontal={false} />)}
           </div>
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-3 z-20">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
             {groupedByPosition.bottom.map(data => <DirectionArrow key={data.direction} data={data} isHorizontal={true} />)}
           </div>
-          <div className="absolute left-8 top-1/2 transform -translate-y-1/2 flex flex-col gap-3 z-20">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20">
             {groupedByPosition.left.map(data => <DirectionArrow key={data.direction} data={data} isHorizontal={false} />)}
-          </div>
-
-          <div className="h-[700px]" />
-        </div>
-
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
-          {/* 범례 카드들도 다크모드 적용 */}
-          <div className="p-4 bg-red-50 dark:bg-red-900/10 rounded-lg border-2 border-red-200 dark:border-red-900/30">
-            <div className="text-xs text-red-600 dark:text-red-400 mb-1 font-semibold">좌회전</div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-red-500 shadow" />
-              <span className="text-sm font-medium text-red-700 dark:text-red-300">빨강</span>
-            </div>
-          </div>
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border-2 border-blue-200 dark:border-blue-900/30">
-            <div className="text-xs text-blue-600 dark:text-blue-400 mb-1 font-semibold">직진</div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-blue-500 shadow" />
-              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">파랑</span>
-            </div>
-          </div>
-          <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-lg border-2 border-green-200 dark:border-green-900/30">
-            <div className="text-xs text-green-600 dark:text-green-400 mb-1 font-semibold">우회전</div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-green-500 shadow" />
-              <span className="text-sm font-medium text-green-700 dark:text-green-300">초록</span>
-            </div>
-          </div>
-          <div className="p-4 bg-violet-50 dark:bg-violet-900/10 rounded-lg border-2 border-violet-200 dark:border-violet-900/30">
-            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1 font-semibold">총 데이터</div>
-            <div className="text-2xl font-bold text-violet-700 dark:text-violet-400">
-              {Object.keys(aggregatedData).length}
-            </div>
-            <div className="text-xs text-slate-600 dark:text-slate-400">개 방향</div>
           </div>
         </div>
       </CardContent>

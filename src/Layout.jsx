@@ -3,11 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { LayoutDashboard, Route, GitCompare, BarChart3, Map } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
-// ▼▼▼ [추가] 필터 컴포넌트 및 훅 임포트 ▼▼▼
 import DateSelector from "@/components/dashboard/DateSelector";
 import TimePeriodSelector from "@/components/dashboard/TimePeriodSelector";
 import { useFilter } from "@/context/FilterContext";
-// ▲▲▲ [추가] ▲▲▲
 import {
   Sidebar,
   SidebarContent,
@@ -30,14 +28,12 @@ const navigationItems = [
 
 export default function Layout({ children }) {
   const location = useLocation();
-  // ▼▼▼ [추가] 전역 필터 상태 사용 ▼▼▼
   const { 
     selectedDate, setSelectedDate, 
     timePeriod, setTimePeriod, 
     availableDates, availableTimePeriods, 
     isSelectionEnabled 
   } = useFilter();
-  // ▲▲▲ [추가] ▲▲▲
 
   return (
     <SidebarProvider>
@@ -57,7 +53,6 @@ export default function Layout({ children }) {
           </SidebarHeader>
           
           <SidebarContent className="p-3 flex flex-col h-full">
-            {/* 기존 메뉴 */}
             <SidebarGroup>
               <SidebarGroupLabel className="text-xs font-semibold text-slate-500 dark:text-dashdark-muted uppercase tracking-wider px-3 py-2">
                 Analytics
@@ -89,7 +84,6 @@ export default function Layout({ children }) {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* 연구 범위 박스 */}
             <SidebarGroup className="mt-4">
               <SidebarGroupContent>
                 <div className="mx-3 px-4 py-4 bg-slate-100 dark:bg-dashdark-card rounded-xl border border-slate-200 dark:border-dashdark-border">
@@ -105,7 +99,6 @@ export default function Layout({ children }) {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* ▼▼▼ [추가] 데이터 필터 영역 (요청하신 위치) ▼▼▼ */}
             <SidebarGroup className="mt-2">
               <SidebarGroupLabel className="text-xs font-semibold text-slate-500 dark:text-dashdark-muted uppercase tracking-wider px-3 py-2">
                 Data Filter
@@ -127,7 +120,6 @@ export default function Layout({ children }) {
                 </div>
               </SidebarGroupContent>
             </SidebarGroup>
-            {/* ▲▲▲ [추가] ▲▲▲ */}
 
             <div className="mt-auto p-4 border-t border-slate-200 dark:border-dashdark-border flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-600 dark:text-dashdark-muted">테마 설정</span>

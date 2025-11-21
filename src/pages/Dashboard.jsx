@@ -2,30 +2,27 @@ import React, { useState, useEffect, useMemo } from "react";
 import axios from 'axios';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart2, Database, Filter, Target } from 'lucide-react';
+import { BarChart2, Database, Filter, Target, LayoutDashboard, Navigation, Maximize2, X } from 'lucide-react';
 
 import IntersectionMap from "../components/dashboard/IntersectionMap";
 import VehicleTypeChart from "../components/dashboard/VehicleTypeChart";
 import TrafficVolumeDisplay from "../components/dashboard/TrafficVolumeDisplay";
 import GEHAnalysis from "../components/dashboard/GEHAnalysis";
-// DateSelector, TimePeriodSelector 임포트 제거 (Layout으로 이동됨)
-// ▼▼▼ [추가] useFilter 임포트 ▼▼▼
 import { useFilter } from "@/context/FilterContext";
-// ▲▲▲ [추가] ▲▲▲
 
 const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 
 export default function Dashboard() {
   const [selectedIntersection, setSelectedIntersection] = useState(null);
+  const [isTrafficVolumeOpen, setIsTrafficVolumeOpen] = useState(false);
   
-  // ▼▼▼ [수정] Context에서 필터 상태 및 세터 가져오기 ▼▼▼
   const { 
     selectedDate, timePeriod, 
     setAvailableDates, setAvailableTimePeriods, setIsSelectionEnabled,
     setSelectedDate, setTimePeriod 
   } = useFilter();
-  // ▲▲▲ [수정] ▲▲▲
 
   const { data: intersections, isLoading: isLoadingIntersections } = useQuery({
     queryKey: ['intersections'],
@@ -39,7 +36,6 @@ export default function Dashboard() {
     initialData: [],
   });
 
-  // ▼▼▼ [수정] 데이터 로드 시 사이드바 필터 옵션 업데이트 로직 ▼▼▼
   useEffect(() => {
     if (!selectedIntersection) {
       setAvailableDates([]);
@@ -59,12 +55,10 @@ export default function Dashboard() {
     setAvailableTimePeriods(times);
     setIsSelectionEnabled(true);
     
-    // 교차로 변경 시 필터 초기화
     setSelectedDate('all');
     setTimePeriod('all');
 
   }, [selectedIntersection, allTrafficData, setAvailableDates, setAvailableTimePeriods, setIsSelectionEnabled, setSelectedDate, setTimePeriod]);
-  // ▲▲▲ [수정] ▲▲▲
 
   const filteredTrafficData = useMemo(() => {
     if (!selectedIntersection) return [];
@@ -77,117 +71,138 @@ export default function Dashboard() {
   }, [selectedIntersection, allTrafficData, timePeriod, selectedDate]);
 
   return (
-    <div className="max-w-[1800px] mx-auto space-y-6">
-      {/* Header: 필터 카드가 제거되어 제목만 남음 */}
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-            교차로 교통량 분석
-          </h1>
-          <p className="text-slate-600 dark:text-dashdark-muted mt-1">연구 범위 내 교차로 데이터 시각화</p>
+    <div className="max-w-[1800px] mx-auto space-y-3 h-[calc(100vh-4rem)] flex flex-col p-2">
+      
+      {/* [모달] 방향별 교통량 상세 보기 */}
+      {isTrafficVolumeOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          {/* 모달 컨테이너: 최대 너비/높이 제한 */}
+          <div className="bg-white dark:bg-dashdark-bg w-full h-full max-w-6xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-dashdark-border relative">
+            
+            {/* 모달 헤더 */}
+            <div className="flex justify-between items-center p-4 border-b border-slate-200 dark:border-dashdark-border bg-slate-50 dark:bg-dashdark-sidebar shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-violet-100 dark:bg-violet-500/20 rounded-lg">
+                  <Navigation className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">방향별 교통량 상세 분석</h2>
+                  <p className="text-sm text-slate-500 dark:text-dashdark-muted">
+                    {selectedIntersection ? selectedIntersection.intersection_name : "전체"} 교통 흐름 시각화
+                  </p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsTrafficVolumeOpen(false)} className="rounded-full hover:bg-slate-200 dark:hover:bg-dashdark-hover">
+                <X className="w-6 h-6 text-slate-500 dark:text-white" />
+              </Button>
+            </div>
+            
+            {/* 모달 콘텐츠: 오직 TrafficVolumeDisplay만 렌더링 (지도 없음!) */}
+            <div className="flex-1 p-0 bg-slate-100 dark:bg-dashdark-bg/50 relative overflow-hidden">
+               <TrafficVolumeDisplay 
+                 trafficData={filteredTrafficData}
+                 // ▼▼▼ [핵심] 모달에서는 배경 지도 이미지도 안 보이게 null 처리 ▼▼▼
+                 intersectionImage={null} 
+                 // ▲▲▲ [핵심] ▲▲▲
+               />
+            </div>
+          </div>
         </div>
-        {/* 기존 필터 카드 제거됨 (사이드바 이동) */}
+      )}
+
+      {/* Header & Top Bar */}
+      <div className="flex flex-col md:flex-row gap-3 justify-between items-end md:items-center shrink-0">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <LayoutDashboard className="w-6 h-6 text-violet-500" />
+            교통 데이터 대시보드
+          </h1>
+        </div>
+
+        {/* 상단바: 방향별 교통량 바로가기 */}
+        <Card className="flex items-center gap-4 p-2 px-4 bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => setIsTrafficVolumeOpen(true)}>
+          <div className="flex items-center gap-3">
+             <div className="p-1.5 bg-violet-100 dark:bg-violet-900/20 rounded-md">
+               <Navigation className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+             </div>
+             <div className="flex flex-col">
+               <span className="text-xs font-bold text-slate-900 dark:text-white">방향별 교통량</span>
+               <span className="text-[10px] text-slate-500 dark:text-dashdark-muted">클릭하여 상세 보기</span>
+             </div>
+          </div>
+          <Maximize2 className="w-4 h-4 text-slate-400 dark:text-slate-600" />
+        </Card>
       </div>
 
-      {/* 메인 레이아웃 */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 relative z-0">
+      {/* Main Layout Grid */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0">
         
-        {/* 1. Map Section + Stats Info */}
-        <div className="xl:col-span-1 space-y-6">
-          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg overflow-hidden h-full flex flex-col">
-            <CardHeader className="bg-slate-50 dark:bg-dashdark-sidebar border-b border-slate-100 dark:border-dashdark-border shrink-0">
-              <CardTitle className="text-slate-900 dark:text-white">연구 범위 맵</CardTitle>
+        {/* [Left Column] 연구 범위 맵 */}
+        <div className="lg:col-span-4 flex flex-col h-full min-h-0">
+          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col h-full overflow-hidden">
+            <CardHeader className="bg-slate-50 dark:bg-dashdark-sidebar border-b border-slate-100 dark:border-dashdark-border py-3 px-4 shrink-0">
+              <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">연구 범위 맵</CardTitle>
             </CardHeader>
-            
-            <CardContent className="p-0 flex flex-col flex-1">
-              {/* 지도 영역 */}
-              <div className="relative h-[550px] w-full shrink-0">
-                {isLoadingIntersections ? (
-                  <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-dashdark-bg">
-                    <div className="text-slate-400">지도 데이터를 불러오는 중...</div>
-                  </div>
-                ) : (
+            <CardContent className="p-0 flex-1 relative min-h-0">
+              {isLoadingIntersections ? (
+                <Skeleton className="w-full h-full" />
+              ) : (
+                <div className="w-full h-full">
                   <IntersectionMap
                     intersections={intersections}
                     onSelectIntersection={setSelectedIntersection}
                     selectedIntersectionId={selectedIntersection?.intersection_id}
                   />
-                )}
-              </div>
-
-              {/* 하단 통계 정보 */}
-              <div className="flex-1 p-5 bg-slate-50 dark:bg-dashdark-sidebar/50 border-t border-slate-200 dark:border-dashdark-border">
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">데이터 요약</h4>
-                <div className="space-y-3">
-                  
-                  <div className="flex items-center justify-between p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-md">
-                        <BarChart2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <span className="text-sm font-medium text-slate-600 dark:text-dashdark-muted">총 교차로</span>
-                    </div>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">
-                      {intersections.length}개
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-violet-100 dark:bg-violet-900/30 rounded-md">
-                        <Database className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-                      </div>
-                      <span className="text-sm font-medium text-slate-600 dark:text-dashdark-muted">총 교통 데이터</span>
-                    </div>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">
-                      {allTrafficData.length}개
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-md">
-                        <Filter className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      </div>
-                      <span className="text-sm font-medium text-slate-600 dark:text-dashdark-muted">필터링된 데이터</span>
-                    </div>
-                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                      {filteredTrafficData.length}개
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-md">
-                        <Target className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                      </div>
-                      <span className="text-sm font-medium text-slate-600 dark:text-dashdark-muted">선택된 교차로 ID</span>
-                    </div>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">
-                      {selectedIntersection ? selectedIntersection.intersection_id : '-'}
-                    </span>
-                  </div>
-
                 </div>
-              </div>
-
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* 2. Charts Section */}
-        <div className="xl:col-span-2 space-y-6">
-          <VehicleTypeChart trafficData={filteredTrafficData} />
-          <GEHAnalysis trafficData={filteredTrafficData} />
+        {/* [Right Column] 통계 및 차트 */}
+        <div className="lg:col-span-8 flex flex-col gap-3 h-full min-h-0">
+          
+          {/* 1. 데이터 요약 */}
+          <div className="grid grid-cols-4 gap-3 shrink-0">
+            <div className="p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col items-center justify-center gap-1">
+              <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-dashdark-muted">
+                <BarChart2 className="w-3 h-3" /> 총 교차로
+              </div>
+              <span className="text-lg font-bold text-slate-900 dark:text-white">{intersections.length}</span>
+            </div>
+            <div className="p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col items-center justify-center gap-1">
+              <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-dashdark-muted">
+                <Database className="w-3 h-3" /> 데이터
+              </div>
+              <span className="text-lg font-bold text-slate-900 dark:text-white">{allTrafficData.length}</span>
+            </div>
+            <div className="p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col items-center justify-center gap-1">
+              <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-dashdark-muted">
+                <Filter className="w-3 h-3" /> 필터링
+              </div>
+              <span className="text-lg font-bold text-emerald-500">{filteredTrafficData.length}</span>
+            </div>
+            <div className="p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col items-center justify-center gap-1">
+              <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-dashdark-muted">
+                <Target className="w-3 h-3" /> 선택 ID
+              </div>
+              <span className="text-lg font-bold text-amber-500">{selectedIntersection ? selectedIntersection.intersection_id : '-'}</span>
+            </div>
+          </div>
+
+          {/* 2. 차종 분포 */}
+          <div className="flex-[2] min-h-0">
+             <VehicleTypeChart trafficData={filteredTrafficData} />
+          </div>
+
+          {/* 3. GEH 분석 & R^2 */}
+          <div className="flex-1 min-h-[240px]">
+             <GEHAnalysis trafficData={filteredTrafficData} />
+          </div>
+
         </div>
 
       </div>
-
-      {/* 3. Traffic Volume */}
-      <TrafficVolumeDisplay 
-        trafficData={filteredTrafficData}
-        intersectionImage={selectedIntersection?.intersection_image}
-      />
     </div>
   );
 }

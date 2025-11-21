@@ -12,32 +12,19 @@ const COLORS = {
 export default function VehicleTypeChart({ trafficData }) {
   if (!trafficData || trafficData.length === 0) {
     return (
-      <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-white">차종 분포</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 flex items-center justify-center text-slate-400 dark:text-slate-600">
-            교차로를 선택해주세요
-          </div>
-        </CardContent>
+      <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm h-full flex flex-col justify-center items-center">
+        <div className="text-slate-400 dark:text-slate-600 text-sm">데이터 없음</div>
       </Card>
     );
   }
 
   const aggregateVehicleData = () => {
-    const totals = {
-      '승용': 0,
-      '버스': 0,
-      '화물': 0,
-    };
-
+    const totals = { '승용': 0, '버스': 0, '화물': 0 };
     trafficData.forEach(data => {
       totals['승용'] += data.소형_승용 || 0;
       totals['버스'] += (data.버스_소형 || 0) + (data.버스_대형 || 0);
       totals['화물'] += (data.화물_소형 || 0) + (data.화물_중형 || 0) + (data.화물_대형 || 0);
     });
-
     return Object.entries(totals)
       .map(([name, value]) => ({ name, value }))
       .filter(item => item.value > 0);
@@ -45,89 +32,71 @@ export default function VehicleTypeChart({ trafficData }) {
 
   const data = aggregateVehicleData();
   const total = data.reduce((sum, item) => sum + item.value, 0);
-  
   const dataWithPercentage = data.map(item => ({
     ...item,
     percentage: ((item.value / total) * 100).toFixed(1)
   }));
 
-  const iconMap = {
-    '승용': Car,
-    '버스': Bus,
-    '화물': Truck,
-  };
+  const iconMap = { '승용': Car, '버스': Bus, '화물': Truck };
 
   return (
-    <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
-      <CardHeader className="border-b border-slate-100 dark:border-dashdark-border pb-4">
-        <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2">
-          <Car className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+    <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm h-full flex flex-col">
+      <CardHeader className="border-b border-slate-100 dark:border-dashdark-border py-3 px-4 shrink-0">
+        <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <Car className="w-4 h-4 text-violet-500" />
           차종 분포
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-4">
-        <ResponsiveContainer width="100%" height={280}>
-          <PieChart>
-            <Pie
-              data={dataWithPercentage}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ name, percentage }) => `${name} ${percentage}%`}
-              outerRadius={90}
-              fill="#8884d8"
-              dataKey="value"
-              stroke="none"
-            >
-              {dataWithPercentage.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[entry.name]} />
-              ))}
-            </Pie>
-            {/* ▼▼▼ [수정] 툴팁 스타일: 흰색 배경에 검은 글씨로 변경하여 가독성 확보 ▼▼▼ */}
-            <Tooltip 
-              formatter={(value) => value.toLocaleString() + '대'} 
-              contentStyle={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.9)', 
-                borderColor: '#e2e8f0', 
-                borderRadius: '8px',
-                color: '#1e293b',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-              }}
-              itemStyle={{ color: '#1e293b' }}
-            />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
+      <CardContent className="p-4 flex-1 flex flex-col min-h-0">
+        <div className="flex-1 min-h-0 relative">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={dataWithPercentage}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percentage }) => `${name} ${percentage}%`}
+                outerRadius="80%"
+                fill="#8884d8"
+                dataKey="value"
+                stroke="none"
+              >
+                {dataWithPercentage.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[entry.name]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value) => value.toLocaleString() + '대'} 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                  borderColor: '#e2e8f0', 
+                  borderRadius: '8px',
+                  color: '#1e293b',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+                itemStyle={{ color: '#1e293b' }}
+              />
+              <Legend wrapperStyle={{ fontSize: '11px' }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
         
-        <div className="mt-4 space-y-2">
+        <div className="mt-2 space-y-1 shrink-0 overflow-y-auto max-h-[100px]">
           {dataWithPercentage.map(item => {
             const Icon = iconMap[item.name];
             return (
-              <div key={item.name} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-dashdark-sidebar rounded-lg border border-transparent dark:border-dashdark-border hover:bg-slate-100 dark:hover:bg-dashdark-hover transition-colors">
-                <div 
-                  className="p-2 rounded-lg" 
-                  style={{ backgroundColor: COLORS[item.name] + '20' }}
-                >
-                  <Icon className="w-5 h-5" style={{ color: COLORS[item.name] }} />
+              <div key={item.name} className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-dashdark-sidebar rounded hover:bg-slate-100 dark:hover:bg-dashdark-hover transition-colors">
+                <div className="p-1.5 rounded bg-white/50 dark:bg-black/20">
+                  <Icon className="w-3 h-3" style={{ color: COLORS[item.name] }} />
                 </div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-slate-700 dark:text-white">{item.name}</div>
-                  <div className="text-xs text-slate-500 dark:text-dashdark-muted">{item.percentage}%</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-slate-900 dark:text-white">{item.value.toLocaleString()}</div>
-                  <div className="text-xs text-slate-500 dark:text-dashdark-muted">대</div>
+                <div className="flex-1 flex justify-between items-center">
+                  <span className="text-xs text-slate-700 dark:text-white font-medium">{item.name}</span>
+                  <span className="text-xs text-slate-500 dark:text-dashdark-muted">{item.value.toLocaleString()}대 ({item.percentage}%)</span>
                 </div>
               </div>
             );
           })}
-        </div>
-        
-        <div className="mt-4 p-3 bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-900/20 dark:to-indigo-900/20 rounded-lg border border-violet-200 dark:border-violet-800/30">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">총 교통량</span>
-            <span className="text-xl font-bold text-indigo-700 dark:text-indigo-400">{total.toLocaleString()}대</span>
-          </div>
         </div>
       </CardContent>
     </Card>
