@@ -1,17 +1,13 @@
 import React, { useState } from "react";
 import axios from 'axios';
 import { useQuery } from "@tanstack/react-query";
-// ▼▼▼ [수정] useMap 추가 임포트 ▼▼▼
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
-// ▲▲▲ [수정] ▲▲▲
 import L from 'leaflet';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-// ▼▼▼ [수정] Lock, Unlock 아이콘 추가 임포트 ▼▼▼
 import { Route, Clock, Trash2, MapPin, Loader2, Lock, Unlock } from 'lucide-react';
-// ▲▲▲ [수정] ▲▲▲
 import 'leaflet/dist/leaflet.css';
 
 const API_URL = 'https://dt-dashboard-back.onrender.com/api';
@@ -38,7 +34,6 @@ const selectedIcon = new L.Icon({
   iconAnchor: [20, 20],
 });
 
-// ▼▼▼ [추가] 스크롤 줌 제어 컴포넌트 ▼▼▼
 function ScrollWheelControl({ isLocked, onToggle }) {
   const map = useMap();
   
@@ -70,16 +65,12 @@ function ScrollWheelControl({ isLocked, onToggle }) {
     </div>
   );
 }
-// ▲▲▲ [추가] ▲▲▲
 
 export default function RoutePlanning() {
   const [selectedIntersections, setSelectedIntersections] = useState([]);
   const [routes, setRoutes] = useState([]);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
-  
-  // ▼▼▼ [추가] 스크롤 잠금 상태 (기본값: 잠김) ▼▼▼
   const [isScrollLocked, setIsScrollLocked] = useState(true);
-  // ▲▲▲ [추가] ▲▲▲
 
   const { data: intersections, isLoading } = useQuery({
     queryKey: ['intersections'],
@@ -92,22 +83,56 @@ export default function RoutePlanning() {
     (126.663909 + 126.687575) / 2
   ];
 
+  // ▼▼▼ [수정] 양방향 최단 경로 탐색 로직 적용 ▼▼▼
   const fetchRoute = async (from, to) => {
     setIsLoadingRoute(true);
     const fromCoords = { latitude: parseFloat(from.latitude), longitude: parseFloat(from.longitude) };
     const toCoords = { latitude: parseFloat(to.latitude), longitude: parseFloat(to.longitude) };
 
     try {
-      const url = `https://router.project-osrm.org/route/v1/driving/${fromCoords.longitude},${fromCoords.latitude};${toCoords.longitude},${toCoords.latitude}?overview=full&geometries=geojson`;
-      const response = await fetch(url);
-      const data = await response.json();
+      // 1. OSRM API URL 생성 (driving 모드 사용, radiuses 옵션으로 도로 스내핑 강화)
+      // A -> B
+      const urlForward = `https://router.project-osrm.org/route/v1/driving/${fromCoords.longitude},${fromCoords.latitude};${toCoords.longitude},${toCoords.latitude}?overview=full&geometries=geojson&radiuses=1000;1000`;
+      // B -> A (역방향)
+      const urlBackward = `https://router.project-osrm.org/route/v1/driving/${toCoords.longitude},${toCoords.latitude};${fromCoords.longitude},${fromCoords.latitude}?overview=full&geometries=geojson&radiuses=1000;1000`;
       
-      if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
-        const routeGeometry = data.routes[0].geometry.coordinates;
+      // 2. 두 경로 동시 요청
+      const [resForward, resBackward] = await Promise.all([
+        fetch(urlForward),
+        fetch(urlBackward)
+      ]);
+
+      const dataForward = await resForward.json();
+      const dataBackward = await resBackward.json();
+      
+      let bestRoute = null;
+
+      // 3. 유효한 경로 중 더 짧은 경로 선택
+      const route1 = dataForward.code === 'Ok' && dataForward.routes[0];
+      const route2 = dataBackward.code === 'Ok' && dataBackward.routes[0];
+
+      if (route1 && route2) {
+        // 둘 다 성공하면 거리가 더 짧은 쪽 선택 (U턴 회피)
+        bestRoute = route1.distance <= route2.distance ? route1 : route2;
+      } else if (route1) {
+        bestRoute = route1;
+      } else if (route2) {
+        bestRoute = route2;
+      }
+
+      if (bestRoute) {
+        const routeGeometry = bestRoute.geometry.coordinates;
         const positions = routeGeometry.map(coord => [coord[1], coord[0]]);
-        const distance = (data.routes[0].distance / 1000).toFixed(2);
-        const duration = Math.round(data.routes[0].duration);
-        return { positions, distance, duration };
+        const distanceKm = bestRoute.distance / 1000;
+        
+        // 예상 시간 (평균 50km/h 가정)
+        const duration = Math.round((distanceKm / 50) * 3600);
+
+        return {
+          positions,
+          distance: distanceKm.toFixed(2),
+          duration: duration,
+        };
       }
     } catch (error) {
       console.error('Error fetching route:', error);
@@ -115,12 +140,14 @@ export default function RoutePlanning() {
       setIsLoadingRoute(false);
     }
     
+    // 실패 시 직선 거리 Fallback
     return {
       positions: [[fromCoords.latitude, fromCoords.longitude], [toCoords.latitude, toCoords.longitude]],
       distance: calculateDistance(fromCoords, toCoords),
       duration: null,
     };
   };
+  // ▲▲▲ [수정 완료] ▲▲▲
 
   const calculateDistance = (from, to) => {
     const R = 6371;
@@ -226,9 +253,7 @@ export default function RoutePlanning() {
                     center={center} 
                     zoom={14} 
                     style={{ height: '100%', width: '100%' }}
-                    // ▼▼▼ [수정] 스크롤 줌 제어 연결 ▼▼▼
                     scrollWheelZoom={!isScrollLocked}
-                    // ▲▲▲ [수정] ▲▲▲
                   >
                     <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     {intersections.map((intersection) => (
@@ -246,13 +271,10 @@ export default function RoutePlanning() {
                         pathOptions={{ color: 'rgb(139, 92, 246)', weight: 5, opacity: 0.9 }}
                       />
                     ))}
-                    
-                    {/* ▼▼▼ [추가] 스크롤 제어 버튼 배치 ▼▼▼ */}
                     <ScrollWheelControl 
                       isLocked={isScrollLocked} 
                       onToggle={() => setIsScrollLocked(!isScrollLocked)} 
                     />
-                    {/* ▲▲▲ [추가] ▲▲▲ */}
                   </MapContainer>
                 )}
               </div>
