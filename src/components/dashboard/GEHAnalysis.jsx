@@ -17,12 +17,12 @@ const calculateGEH = (simulated, observed) => {
 export default function GEHAnalysis({ trafficData }) {
   if (!trafficData || trafficData.length === 0) {
     return (
-      <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-lg">
+      <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
         <CardHeader>
-          <CardTitle className="text-slate-900">GEH 통계 분석</CardTitle>
+          <CardTitle className="text-slate-900 dark:text-white">GEH 통계 분석</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-32 flex items-center justify-center text-slate-400">
+          <div className="h-32 flex items-center justify-center text-slate-400 dark:text-slate-600">
             데이터 없음
           </div>
         </CardContent>
@@ -62,18 +62,17 @@ export default function GEHAnalysis({ trafficData }) {
   const rSquared = ssTot > 0 ? 1 - (ssRes / ssTot) : 0;
 
   return (
-    // [수정] Grid 제거 -> Flex Column으로 변경 (좁은 곳에서 1열 배치)
     <div className="flex flex-col gap-4">
       
       {/* 1. GEH 분포 파이 차트 */}
-      <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-lg">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-slate-900 flex items-center gap-2 text-sm">
-            <Activity className="w-4 h-4 text-amber-600" />
+      <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
+        <CardHeader className="pb-2 border-b border-slate-100 dark:border-dashdark-border">
+          <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2 text-sm">
+            <Activity className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             GEH 분포
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
@@ -81,32 +80,32 @@ export default function GEHAnalysis({ trafficData }) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                // 라벨 단순화
                 label={({ value }) => `${value}`}
                 outerRadius={70}
                 fill="#8884d8"
                 dataKey="value"
+                stroke="none" 
               >
                 {pieData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={GEH_COLORS[entry.name]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={{ backgroundColor: '#1E2330', borderColor: '#2A303F', color: '#fff' }} />
               <Legend wrapperStyle={{ fontSize: '11px' }} />
             </PieChart>
           </ResponsiveContainer>
 
           <div className="mt-2 space-y-1">
             {Object.entries(gehDistribution).map(([category, count]) => (
-              <div key={category} className="flex items-center justify-between p-1.5 bg-slate-50 rounded">
+              <div key={category} className="flex items-center justify-between p-1.5 bg-slate-50 dark:bg-dashdark-sidebar rounded border border-transparent dark:border-dashdark-border">
                 <div className="flex items-center gap-2">
                   <div 
                     className="w-2 h-2 rounded-full" 
                     style={{ backgroundColor: GEH_COLORS[category] }}
                   />
-                  <span className="text-[10px] text-slate-600">{category}</span>
+                  <span className="text-[10px] text-slate-600 dark:text-dashdark-muted">{category}</span>
                 </div>
-                <span className="text-xs font-semibold text-slate-900">{count}개</span>
+                <span className="text-xs font-semibold text-slate-900 dark:text-white">{count}개</span>
               </div>
             ))}
           </div>
@@ -114,43 +113,49 @@ export default function GEHAnalysis({ trafficData }) {
       </Card>
 
       {/* 2. R-Squared 적합도 */}
-      <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-lg">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-slate-900 flex items-center gap-2 text-sm">
-            <TrendingUp className="w-4 h-4 text-green-600" />
+      <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
+        <CardHeader className="pb-2 border-b border-slate-100 dark:border-dashdark-border">
+          <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2 text-sm">
+            <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
             R² 적합도
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="mb-4 p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+        <CardContent className="pt-4">
+          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800/30">
             <div className="text-center">
-              {/* [수정] 글자 크기 축소 (4xl -> 3xl) */}
-              <div className="text-3xl font-bold text-green-700 mb-1">
+              <div className="text-3xl font-bold text-green-700 dark:text-green-400 mb-1">
                 {rSquared.toFixed(4)}
               </div>
-              <div className="text-xs text-slate-600">R-Squared 값</div>
+              <div className="text-xs text-slate-600 dark:text-green-200/70">R-Squared 값</div>
             </div>
           </div>
 
           <ResponsiveContainer width="100%" height={180}>
             <ScatterChart margin={{ top: 10, right: 10, bottom: 10, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2A303F" />
               <XAxis 
                 type="number" 
                 dataKey="observed" 
                 name="실제"
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 10, fill: '#94A3B8' }}
+                axisLine={{ stroke: '#475569' }}
+                tickLine={false}
               />
               <YAxis 
                 type="number" 
                 dataKey="simulated" 
                 name="시뮬"
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 10, fill: '#94A3B8' }}
+                axisLine={{ stroke: '#475569' }}
+                tickLine={false}
               />
-              <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+              <Tooltip 
+                cursor={{ strokeDasharray: '3 3' }} 
+                contentStyle={{ backgroundColor: '#1E2330', borderColor: '#2A303F', color: '#fff' }}
+              />
               <Scatter 
                 data={gehData} 
-                fill="rgb(99, 102, 241)"
+                fill="rgb(139, 92, 246)"
                 fillOpacity={0.6}
                 r={4}
               />

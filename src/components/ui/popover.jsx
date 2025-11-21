@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 
 export function Popover({ children }) {
   const [open, setOpen] = useState(false);
-  // 자식 컴포넌트(Trigger, Content)에 상태 전달
   const childrenWithProps = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
       return React.cloneElement(child, { open, setOpen });
@@ -43,7 +42,10 @@ export function PopoverContent({ className, align = "center", children, open, se
   return (
     <div
       ref={ref}
-      className={`absolute z-[1000] mt-2 w-72 rounded-md border border-slate-200 bg-white p-4 shadow-md outline-none ${className}`}
+      // ▼▼▼ [수정] 배경색: bg-white -> bg-white dark:bg-dashdark-card
+      // ▼▼▼ [수정] 테두리: border-slate-200 -> border-slate-200 dark:border-dashdark-border
+      // ▼▼▼ [수정] 텍스트: dark:text-white 추가
+      className={`absolute z-[1000] mt-2 w-72 rounded-md border border-slate-200 dark:border-dashdark-border bg-white dark:bg-dashdark-card text-slate-950 dark:text-white p-4 shadow-md outline-none ${className}`}
       style={{ left: align === "center" ? "50%" : "0", transform: align === "center" ? "translateX(-50%)" : "none" }}
       {...props}
     >

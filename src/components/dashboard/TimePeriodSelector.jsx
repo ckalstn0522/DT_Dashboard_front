@@ -53,11 +53,12 @@ export default function TimePeriodSelector({ value, onChange, availableTimePerio
   return (
     <div className="flex items-center gap-3">
       <div className="flex items-center gap-2">
-        <Clock className="w-5 h-5 text-cyan-600" />
-        <span className="text-sm font-medium text-slate-700">시간대</span>
+        <Clock className="w-5 h-5 text-cyan-600 dark:text-violet-400" />
+        <span className="text-sm font-medium text-slate-700 dark:text-white">시간대</span>
       </div>
       <Select value={value} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger className="w-52 bg-white border-slate-300">
+        {/* SelectTrigger 스타일은 components/ui/select.jsx에서 이미 다크모드 적용됨 */}
+        <SelectTrigger className="w-52 border-slate-300 dark:border-dashdark-border">
           <SelectValue placeholder={disabled ? "교차로를 먼저 선택하세요" : "시간대 선택"} />
         </SelectTrigger>
         <SelectContent className="max-h-[400px]">
