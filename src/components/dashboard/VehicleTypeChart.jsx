@@ -40,18 +40,16 @@ export default function VehicleTypeChart({ trafficData, compact = false }) {
   const iconMap = { '승용': Car, '버스': Bus, '화물': Truck };
 
   return (
-    // ▼▼▼ [수정] 배경 투명 & 테두리 제거 (HUD 카드 안에 들어가므로) ▼▼▼
     <Card className="h-full flex flex-col bg-transparent border-0 shadow-none">
-      {/* ▼▼▼ [수정] compact 모드에서도 헤더 표시 (제목 통일) ▼▼▼ */}
-      <CardHeader className={`border-b border-slate-100 dark:border-dashdark-border shrink-0 ${compact ? 'py-2 px-4 border-slate-700/30' : 'py-3 px-4'}`}>
-        <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Car className="w-4 h-4 text-violet-500" />
-          차종 분포
-        </CardTitle>
-      </CardHeader>
-      
+      {!compact && (
+        <CardHeader className="border-b border-slate-100 dark:border-dashdark-border py-3 px-4 shrink-0">
+          <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Car className="w-4 h-4 text-violet-500" />
+            차종 분포
+          </CardTitle>
+        </CardHeader>
+      )}
       <CardContent className={`flex-1 flex flex-col min-h-0 ${compact ? 'p-2' : 'p-4'}`}>
-        {/* 차트 영역 */}
         <div className="flex-1 min-h-0 relative">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -60,8 +58,9 @@ export default function VehicleTypeChart({ trafficData, compact = false }) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={compact ? null : ({ name, percentage }) => `${name} ${percentage}%`}
-                outerRadius={compact ? "70%" : "80%"}
+                // ▼▼▼ [수정] 라벨에 '이름 + 대수 + %' 모두 표시 (compact일 때도 표시) ▼▼▼
+                label={({ name, value, percentage }) => `${name} ${value}대 (${percentage}%)`} 
+                outerRadius={compact ? "65%" : "80%"} // 라벨 공간 확보를 위해 반지름 약간 축소
                 fill="#8884d8"
                 dataKey="value"
                 stroke="none"
@@ -87,7 +86,7 @@ export default function VehicleTypeChart({ trafficData, compact = false }) {
           </ResponsiveContainer>
         </div>
         
-        {/* 하단 리스트 (compact 모드용) */}
+        {/* compact 모드일 때 하단 리스트 표시 (중복 정보지만 디자인상 유지) */}
         {compact && (
             <div className="mt-1 space-y-1 shrink-0 overflow-y-auto max-h-[40%] px-1 pb-1">
             {dataWithPercentage.map(item => {
@@ -99,7 +98,7 @@ export default function VehicleTypeChart({ trafficData, compact = false }) {
                     </div>
                     <div className="flex-1 flex justify-between items-center">
                     <span className="text-[10px] text-slate-200 font-medium">{item.name}</span>
-                    <span className="text-[10px] text-slate-400">{item.value.toLocaleString()} <span className="text-[9px] opacity-70">({item.percentage}%)</span></span>
+                    <span className="text-[10px] text-slate-400">{item.value.toLocaleString()}대 <span className="text-[9px] opacity-70">({item.percentage}%)</span></span>
                     </div>
                 </div>
                 );

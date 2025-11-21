@@ -112,7 +112,7 @@ export default function CombinedHUD() {
       {/* [중앙 패널] 투명 공간 */}
       <div className="w-[50%] h-full pointer-events-none" style={{ backgroundColor: 'transparent' }} />
 
-      {/* [오른쪽 패널] 차트 (공백 제거 및 비율 조정) */}
+      {/* [오른쪽 패널] 차트 */}
       <div 
         className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-3"
         style={{ 
@@ -123,21 +123,30 @@ export default function CombinedHUD() {
       >
         {selectedId && (
           <>
-            {/* 1. 차종 분포: 35% 높이 */}
-            <Card className={`h-[35%] w-full shrink-0 overflow-hidden ${hudCardStyle}`}>
-              {/* ▼▼▼ [수정] 헤더 제거 (VehicleTypeChart 내부 헤더 사용) ▼▼▼ */}
+            {/* 1. 차종 분포: 40% 높이 (약간 늘림) */}
+            <Card className={`h-[40%] w-full shrink-0 overflow-hidden ${hudCardStyle}`}>
+              <CardHeader className="py-2 px-4 border-b border-slate-800/50 shrink-0">
+                <CardTitle className="text-slate-100 text-sm font-medium">차종 분포</CardTitle>
+              </CardHeader>
               <CardContent className="p-0 h-full">
-                  <VehicleTypeChart trafficData={filteredTrafficData} compact={true} />
+                  <div className="h-full pb-8"> 
+                    <VehicleTypeChart trafficData={filteredTrafficData} compact={true} />
+                  </div>
               </CardContent>
             </Card>
             
-            {/* 2. GEH 분석: 나머지 공간(약 60%+) 꽉 채움 */}
-            {/* ▼▼▼ [수정] flex-1을 주어 하단 여백 없이 꽉 차게 함 ▼▼▼ */}
+            {/* 2. GEH 분석: 55% -> 60%로 늘려 하단 채움 */}
+            {/* ▼▼▼ [수정] 높이 비율 조정 (남은 공간 꽉 채우도록 flex-1도 가능하지만 비율 조정으로 맞춤) ▼▼▼ */}
             <Card className={`flex-1 w-full shrink-0 overflow-hidden ${hudCardStyle}`}>
                <CardContent className="p-0 h-full">
-                  <GEHAnalysis trafficData={filteredTrafficData} compact={true} />
+                  <div className="h-full pb-4">
+                    <GEHAnalysis trafficData={filteredTrafficData} compact={true} />
+                  </div>
                </CardContent>
             </Card>
+
+            {/* 하단 여백 최소화 */}
+            <div className="h-2 shrink-0"></div>
           </>
         )}
       </div>
