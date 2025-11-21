@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import axios from 'axios';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,8 +11,18 @@ import GEHAnalysis from "../../components/dashboard/GEHAnalysis";
 
 const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 
+// HUD 카드 공통 스타일
+const hudCardStyle = "bg-slate-950/90 backdrop-blur-md border-slate-800/80 shadow-2xl";
+
 export default function CombinedHUD() {
   const [selectedId, setSelectedId] = useState(null);
+
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+    return () => {
+      // document.documentElement.classList.remove('dark');
+    };
+  }, []);
 
   const { data: intersections, isLoading: isLoadingIntersections } = useQuery({
     queryKey: ['intersections'],
@@ -52,48 +62,37 @@ export default function CombinedHUD() {
   }
 
   return (
-    <div className="flex w-full h-screen bg-transparent overflow-hidden">
+    <div className="flex w-full h-screen overflow-hidden" style={{ backgroundColor: 'transparent' }}>
       
-      {/* [왼쪽 패널] 맵 */}
-      <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col">
-        <Card className="flex-1 w-full bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
+      {/* [왼쪽 패널] 지도(85%) + 정보(15%) */}
+      <div className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-3">
+        
+        {/* 1. 상단: 지도 카드 (높이를 85%로 대폭 늘림) */}
+        <Card className={`h-[85%] w-full overflow-hidden ${hudCardStyle}`}>
           <CardContent className="p-0 h-full relative">
             <div className="h-full w-full absolute inset-0">
               <IntersectionMap
                 intersections={intersections}
                 onSelectIntersection={handleMarkerClick}
                 selectedIntersectionId={selectedId}
-                initialZoom={14} 
               />
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* [중앙 패널] */}
-      <div className="w-[50%] h-full pointer-events-none bg-transparent" />
-
-      {/* [오른쪽 패널] 차트 & 정보 */}
-      <div 
-        className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-4"
-        style={{ 
-          overflowY: 'auto',    // 세로 스크롤 활성화
-          maxHeight: '100vh',   // 화면 높이 제한
-          scrollBehavior: 'smooth'
-        }}
-      >
-        
-        {/* 1. 정보 카드 */}
-        <Card className="shrink-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
-          <CardHeader className="pb-2 pt-4 px-4"> 
-            <CardTitle className="text-slate-100 flex items-center gap-2 text-base font-semibold">
+        {/* 2. 하단: 정보 카드 (나머지 공간 flex-1, 약 15%) - 컴팩트한 디자인 적용 */}
+        <Card className={`flex-1 shrink-0 flex flex-col justify-center overflow-hidden ${hudCardStyle}`}>
+          <CardHeader className="py-2 px-4 min-h-0 shrink-0"> 
+            <CardTitle className="text-slate-100 flex items-center gap-2 text-sm font-semibold">
               <Building2 className="w-4 h-4 text-cyan-400" />
-              {selectedIntersection ? selectedIntersection.intersection_name : "교차로 선택"}
+              <span className="truncate">
+                {selectedIntersection ? selectedIntersection.intersection_name : "교차로 선택"}
+              </span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4">
+          <CardContent className="px-4 pb-2 pt-0 flex-1 min-h-0 overflow-auto">
             {selectedIntersection ? (
-              <div className="text-xs text-slate-300 space-y-1.5">
+              <div className="text-[11px] text-slate-300 space-y-1">
                 <div className="flex justify-between items-center border-b border-slate-700/50 pb-1">
                   <span className="text-slate-400">ID</span>
                   <span className="font-mono font-bold text-cyan-200">{selectedIntersection.intersection_id}</span>
@@ -108,37 +107,45 @@ export default function CombinedHUD() {
                 </div>
               </div>
             ) : (
-              <div className="text-xs text-slate-500 text-center py-2">지도에서 마커를 클릭하세요.</div>
+              <div className="text-xs text-slate-500 text-center flex h-full items-center justify-center">
+                지도에서 마커를 클릭하세요.
+              </div>
             )}
           </CardContent>
         </Card>
+      </div>
 
-        {/* 차트 영역 */}
+      {/* [중앙 패널] 투명 공간 */}
+      <div className="w-[50%] h-full pointer-events-none" style={{ backgroundColor: 'transparent' }} />
+
+      {/* [오른쪽 패널] 차트 */}
+      <div 
+        className="w-[25%] h-full p-3 pointer-events-auto flex flex-col gap-3"
+        style={{ 
+          overflowY: 'auto',
+          maxHeight: '100vh',
+          scrollBehavior: 'smooth'
+        }}
+      >
         {selectedId && (
           <>
-            {/* 2. 차종 분포 */}
-            <Card className="shrink-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
-              <CardHeader className="py-3 px-4 border-b border-slate-700/30">
+            {/* 1. 차종 분포 */}
+            <Card className={`shrink-0 overflow-hidden ${hudCardStyle}`}>
+              <CardHeader className="py-3 px-4 border-b border-slate-800/50">
                 <CardTitle className="text-slate-100 text-sm font-medium">차종 분포</CardTitle>
               </CardHeader>
-              {/* [수정] absolute 제거하고 일반 패딩 사용. 내용물만큼 늘어남 */}
-              <CardContent className="p-2">
-                  <VehicleTypeChart trafficData={filteredTrafficData} />
+              <CardContent className="p-0 h-[300px]">
+                  <VehicleTypeChart trafficData={filteredTrafficData} compact={true} />
               </CardContent>
             </Card>
             
-            {/* 3. GEH 분석 */}
-            <Card className="shrink-0 bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl overflow-hidden">
-              <CardHeader className="py-3 px-4 border-b border-slate-700/30">
-                <CardTitle className="text-slate-100 text-sm font-medium">GEH 분석</CardTitle>
-              </CardHeader>
-              {/* [수정] absolute 제거 */}
-              <CardContent className="p-2">
-                  <GEHAnalysis trafficData={filteredTrafficData} />
-              </CardContent>
+            {/* 2. GEH 분석 */}
+            <Card className={`shrink-0 overflow-hidden ${hudCardStyle}`}>
+               <CardContent className="p-0 h-[600px]">
+                  <GEHAnalysis trafficData={filteredTrafficData} compact={true} />
+               </CardContent>
             </Card>
 
-            {/* 스크롤 바닥 여유 공간 */}
             <div className="h-20 shrink-0"></div>
           </>
         )}

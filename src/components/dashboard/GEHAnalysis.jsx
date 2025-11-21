@@ -27,7 +27,8 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
   );
 };
 
-export default function GEHAnalysis({ trafficData }) {
+// ▼▼▼ [수정] compact prop 추가 및 레이아웃 분기 처리 ▼▼▼
+export default function GEHAnalysis({ trafficData, compact = false }) {
   if (!trafficData || trafficData.length === 0) {
     return (
       <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm h-full flex justify-center items-center">
@@ -65,7 +66,10 @@ export default function GEHAnalysis({ trafficData }) {
   const rSquared = ssTot > 0 ? 1 - (ssRes / ssTot) : 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+    // ▼▼▼ [핵심] compact(HUD)일 때는 세로 배치, 아닐 때는 가로 배치 ▼▼▼
+    <div className={`grid ${compact ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 gap-4'} h-full`}>
+      
+      {/* GEH 분포 파이 차트 */}
       <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col h-full">
         <CardHeader className="py-3 px-4 border-b border-slate-100 dark:border-dashdark-border shrink-0">
           <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -87,6 +91,7 @@ export default function GEHAnalysis({ trafficData }) {
         </CardContent>
       </Card>
 
+      {/* R-Squared 적합도 */}
       <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col h-full">
         <CardHeader className="py-3 px-4 border-b border-slate-100 dark:border-dashdark-border shrink-0">
           <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">

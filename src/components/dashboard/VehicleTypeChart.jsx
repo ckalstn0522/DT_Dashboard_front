@@ -9,7 +9,8 @@ const COLORS = {
   '화물': 'rgb(234, 88, 12)',
 };
 
-export default function VehicleTypeChart({ trafficData }) {
+// ▼▼▼ [수정] compact prop 추가 (HUD 호환용) ▼▼▼
+export default function VehicleTypeChart({ trafficData, compact = false }) {
   if (!trafficData || trafficData.length === 0) {
     return (
       <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm h-full flex flex-col justify-center items-center">
@@ -48,6 +49,7 @@ export default function VehicleTypeChart({ trafficData }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 flex-1 flex flex-col min-h-0">
+        {/* 차트 영역: 남은 공간을 모두 차지하도록 설정 */}
         <div className="flex-1 min-h-0 relative">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -82,7 +84,8 @@ export default function VehicleTypeChart({ trafficData }) {
           </ResponsiveContainer>
         </div>
         
-        <div className="mt-2 space-y-1 shrink-0 overflow-y-auto max-h-[100px]">
+        {/* 하단 리스트: compact 모드일 때는 숨기거나 스크롤 처리 */}
+        <div className={`mt-2 space-y-1 shrink-0 overflow-y-auto ${compact ? 'max-h-[80px]' : 'max-h-[120px]'}`}>
           {dataWithPercentage.map(item => {
             const Icon = iconMap[item.name];
             return (
