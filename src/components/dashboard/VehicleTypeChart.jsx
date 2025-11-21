@@ -9,7 +9,6 @@ const COLORS = {
   '화물': 'rgb(234, 88, 12)',
 };
 
-// ▼▼▼ [수정] compact prop 추가 (HUD 호환용) ▼▼▼
 export default function VehicleTypeChart({ trafficData, compact = false }) {
   if (!trafficData || trafficData.length === 0) {
     return (
@@ -41,15 +40,18 @@ export default function VehicleTypeChart({ trafficData, compact = false }) {
   const iconMap = { '승용': Car, '버스': Bus, '화물': Truck };
 
   return (
-    <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm h-full flex flex-col">
-      <CardHeader className="border-b border-slate-100 dark:border-dashdark-border py-3 px-4 shrink-0">
+    // ▼▼▼ [수정] 배경 투명 & 테두리 제거 (HUD 카드 안에 들어가므로) ▼▼▼
+    <Card className="h-full flex flex-col bg-transparent border-0 shadow-none">
+      {/* ▼▼▼ [수정] compact 모드에서도 헤더 표시 (제목 통일) ▼▼▼ */}
+      <CardHeader className={`border-b border-slate-100 dark:border-dashdark-border shrink-0 ${compact ? 'py-2 px-4 border-slate-700/30' : 'py-3 px-4'}`}>
         <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Car className="w-4 h-4 text-violet-500" />
           차종 분포
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 flex-1 flex flex-col min-h-0">
-        {/* 차트 영역: 남은 공간을 모두 차지하도록 설정 */}
+      
+      <CardContent className={`flex-1 flex flex-col min-h-0 ${compact ? 'p-2' : 'p-4'}`}>
+        {/* 차트 영역 */}
         <div className="flex-1 min-h-0 relative">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -58,8 +60,8 @@ export default function VehicleTypeChart({ trafficData, compact = false }) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percentage }) => `${name} ${percentage}%`}
-                outerRadius="80%"
+                label={compact ? null : ({ name, percentage }) => `${name} ${percentage}%`}
+                outerRadius={compact ? "70%" : "80%"}
                 fill="#8884d8"
                 dataKey="value"
                 stroke="none"
@@ -75,32 +77,35 @@ export default function VehicleTypeChart({ trafficData, compact = false }) {
                   borderColor: '#e2e8f0', 
                   borderRadius: '8px',
                   color: '#1e293b',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  fontSize: '11px',
+                  padding: '4px 8px'
                 }}
                 itemStyle={{ color: '#1e293b' }}
               />
-              <Legend wrapperStyle={{ fontSize: '11px' }} />
+              {!compact && <Legend wrapperStyle={{ fontSize: '11px' }} />}
             </PieChart>
           </ResponsiveContainer>
         </div>
         
-        {/* 하단 리스트: compact 모드일 때는 숨기거나 스크롤 처리 */}
-        <div className={`mt-2 space-y-1 shrink-0 overflow-y-auto ${compact ? 'max-h-[80px]' : 'max-h-[120px]'}`}>
-          {dataWithPercentage.map(item => {
-            const Icon = iconMap[item.name];
-            return (
-              <div key={item.name} className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-dashdark-sidebar rounded hover:bg-slate-100 dark:hover:bg-dashdark-hover transition-colors">
-                <div className="p-1.5 rounded bg-white/50 dark:bg-black/20">
-                  <Icon className="w-3 h-3" style={{ color: COLORS[item.name] }} />
+        {/* 하단 리스트 (compact 모드용) */}
+        {compact && (
+            <div className="mt-1 space-y-1 shrink-0 overflow-y-auto max-h-[40%] px-1 pb-1">
+            {dataWithPercentage.map(item => {
+                const Icon = iconMap[item.name];
+                return (
+                <div key={item.name} className="flex items-center gap-2 p-1.5 bg-slate-800/50 rounded hover:bg-slate-700/50 transition-colors">
+                    <div className="p-1 rounded bg-black/30">
+                    <Icon className="w-3 h-3" style={{ color: COLORS[item.name] }} />
+                    </div>
+                    <div className="flex-1 flex justify-between items-center">
+                    <span className="text-[10px] text-slate-200 font-medium">{item.name}</span>
+                    <span className="text-[10px] text-slate-400">{item.value.toLocaleString()} <span className="text-[9px] opacity-70">({item.percentage}%)</span></span>
+                    </div>
                 </div>
-                <div className="flex-1 flex justify-between items-center">
-                  <span className="text-xs text-slate-700 dark:text-white font-medium">{item.name}</span>
-                  <span className="text-xs text-slate-500 dark:text-dashdark-muted">{item.value.toLocaleString()}대 ({item.percentage}%)</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                );
+            })}
+            </div>
+        )}
       </CardContent>
     </Card>
   );
