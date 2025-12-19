@@ -252,7 +252,11 @@ export default function RoutePlanning() {
                                 <div className="text-xs text-slate-500 flex items-center gap-2">
                                     <span>{t('speed')}: {baseSpeed.toFixed(1)} km/h</span>
                                     <span className="w-px h-2 bg-slate-300"></span>
-                                    <span className="flex items-center gap-1"><Car className="w-3 h-3"/> {routes[0].trafficVolumeBase.toLocaleString()}</span>
+                                    <span className="flex items-center gap-1">
+                                      <Car className="w-3 h-3"/>
+                                      <span>Veh</span>
+                                      {routes[0].trafficVolumeBase.toLocaleString()}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -273,7 +277,11 @@ export default function RoutePlanning() {
                                 <div className="text-xs text-violet-500 dark:text-violet-400 flex items-center gap-2">
                                     <span>{t('speed')}: {optionSpeed.toFixed(1)} km/h</span>
                                     <span className="w-px h-2 bg-violet-300 dark:bg-violet-700"></span>
-                                    <span className="flex items-center gap-1"><Car className="w-3 h-3"/> {routes[0].trafficVolumeOption.toLocaleString()}</span>
+                                    <span className="flex items-center gap-1">
+                                      <Car className="w-3 h-3"/>
+                                      <span>Veh</span>
+                                      {routes[0].trafficVolumeOption.toLocaleString()}
+                                    </span>
                                 </div>
                             </div>
                         </div>

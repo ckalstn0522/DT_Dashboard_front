@@ -43,7 +43,7 @@ export const translations = {
     optionScenario: "Option 시나리오",
     speed: "속도",
     compareAnalysis: "통행 시간 비교 분석", // 추가
-    timeGap: "시간 단축", // 추가
+    timeGap: "시간 차이", // 추가
     vehicleCount: "교통량", // 추가
   },
   en: {
@@ -90,7 +90,7 @@ export const translations = {
     optionScenario: "Option Scenario",
     speed: "Speed",
     compareAnalysis: "Travel Time Analysis", // 추가
-    timeGap: "Time Saved", // 추가
+    timeGap: "Time Difference", // 추가
     vehicleCount: "Traffic Volume", // 추가
   }
 };
