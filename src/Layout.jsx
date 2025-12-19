@@ -33,10 +33,11 @@ export default function Layout({ children }) {
   
   const { language, setLanguage, t } = useLanguage();
 
+  // 순서 변경: 시뮬레이션 비교 -> 루트 평가 -> 교차로 성능 평가
   const navigationItems = [
-    { title: t('mainDashboard'), url: createPageUrl("Dashboard"), icon: LayoutDashboard },
-    { title: t('routePlanning'), url: createPageUrl("RoutePlanning"), icon: Route },
     { title: t('simComparison'), url: createPageUrl("Comparison"), icon: GitCompare },
+    { title: t('routePlanning'), url: createPageUrl("RoutePlanning"), icon: Route },
+    { title: t('mainDashboard'), url: createPageUrl("Dashboard"), icon: LayoutDashboard },
   ];
 
   return (

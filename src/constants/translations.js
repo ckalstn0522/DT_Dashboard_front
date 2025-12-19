@@ -20,13 +20,13 @@ export const translations = {
     improvement: "개선",
     decrease: "감소",
     
-    // Metrics
+    // Metrics (이름 변경 반영)
     vht: "VHT (총 통행시간)",
     vkt: "VKT (총 통행거리)",
-    vcur: "VCur (평균 속도)",
-    tcur: "TCur (평균 통행시간)",
-    delay: "Delay (평균 지체)",
-    volume: "Traffic Volume (교통량)",
+    vcur: "평균 차량 속도",
+    tcur: "평균 차량 통행시간",
+    delay: "평균 차량 지체시간",
+    volume: "교통량",
 
     // Route Planning
     routeTitle: "경로 분석",
@@ -42,9 +42,27 @@ export const translations = {
     baseScenario: "Base 시나리오",
     optionScenario: "Option 시나리오",
     speed: "속도",
-    compareAnalysis: "통행 시간 비교 분석", // 추가
-    timeGap: "시간 차이", // 추가
-    vehicleCount: "교통량", // 추가
+    compareAnalysis: "통행 시간 비교 분석",
+    timeGap: "시간 차이",
+    vehicleCount: "교통량",
+    diff: "차이",
+
+    // Dashboard (Main)
+    dashTitle: "교통 데이터 대시보드",
+    kpiTotalInt: "총 교차로",
+    kpiSelectedId: "선택 ID",
+    kpiDataTemp: "데이터(임시)",
+    kpiFilterTemp: "필터링(임시)",
+    base: "Base",
+    option: "Option",
+    los: "서비스 수준(LOS)",
+    grade: "등급",
+
+    // TrafficVolumeDisplay
+    trafficVolumeDirectional: "방향별 교통 데이터 (진입 기준)",
+    approach: "진입",
+    queue: "대기행렬",
+    delaySimple: "지체시간", 
   },
   en: {
     // Sidebar
@@ -70,9 +88,9 @@ export const translations = {
     // Metrics
     vht: "VHT (Total Travel Time)",
     vkt: "VKT (Total Distance)",
-    vcur: "VCur (Avg Speed)",
-    tcur: "TCur (Avg Travel Time)",
-    delay: "Delay (Avg Delay)",
+    vcur: "Avg Vehicle Speed",
+    tcur: "Avg Vehicle Travel Time",
+    delay: "Avg Vehicle Delay",
     volume: "Traffic Volume",
 
     // Route Planning
@@ -89,8 +107,26 @@ export const translations = {
     baseScenario: "Base Scenario",
     optionScenario: "Option Scenario",
     speed: "Speed",
-    compareAnalysis: "Travel Time Analysis", // 추가
-    timeGap: "Time Difference", // 추가
-    vehicleCount: "Traffic Volume", // 추가
+    compareAnalysis: "Travel Time Analysis",
+    timeGap: "Time Difference",
+    vehicleCount: "Traffic Volume",
+    diff: "Difference",
+
+    // Dashboard (Main)
+    dashTitle: "Traffic Data Dashboard",
+    kpiTotalInt: "Total Intersections",
+    kpiSelectedId: "Selected ID",
+    kpiDataTemp: "Data (Temp)",
+    kpiFilterTemp: "Filtering (Temp)",
+    base: "Base",
+    option: "Option",
+    los: "Level of Service (LOS)",
+    grade: "Grade",
+
+    // TrafficVolumeDisplay
+    trafficVolumeDirectional: "Directional Traffic Data (Approach)",
+    approach: "Approach",
+    queue: "Queue",
+    delaySimple: "Delay",
   }
 };

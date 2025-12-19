@@ -104,9 +104,7 @@ export default function RoutePlanning() {
         const positions = routeGeometry.map(coord => [coord[1], coord[0]]);
         const distanceKm = bestRoute.distance / 1000;
         
-        // Base와 Option 각각의 교통량 생성 (랜덤 값)
         const trafficVolumeBase = Math.floor(Math.random() * (3000 - 100 + 1)) + 100;
-        // Option은 Base와 비슷하거나 약간 다른 값으로 설정 (예: 90% ~ 110%)
         const trafficVolumeOption = Math.floor(trafficVolumeBase * (0.9 + Math.random() * 0.2));
 
         return {
@@ -234,7 +232,6 @@ export default function RoutePlanning() {
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
                 
-                {/* 거리 정보 카드 (단독) */}
                 <div className="p-4 bg-slate-50 dark:bg-dashdark-sidebar rounded-xl border border-slate-200 dark:border-dashdark-border text-center">
                   <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t('totalDist')}</div>
                   <div className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -242,56 +239,68 @@ export default function RoutePlanning() {
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                    {/* Base Scenario - 교통량 추가됨 */}
-                    <div className="flex justify-between items-center p-3 rounded-lg bg-slate-100 dark:bg-dashdark-bg border border-slate-200 dark:border-dashdark-border">
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-slate-500"></div>
-                            <div>
-                                <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{t('baseScenario')}</div>
-                                <div className="text-xs text-slate-500 flex items-center gap-2">
-                                    <span>{t('speed')}: {baseSpeed.toFixed(1)} km/h</span>
-                                    <span className="w-px h-2 bg-slate-300"></span>
-                                    <span className="flex items-center gap-1">
-                                      <Car className="w-3 h-3"/>
-                                      <span>Veh</span>
-                                      {routes[0].trafficVolumeBase.toLocaleString()}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="text-lg font-bold text-slate-700 dark:text-slate-200">
-                           {(() => {
-                                const duration = calculateDuration(routes[0].distance, baseSpeed);
-                                return <>{Math.floor(duration / 60)} <span className="text-xs font-normal">min</span> {duration % 60}<span className="text-xs font-normal">s</span></>;
-                            })()}
-                        </div>
-                    </div>
-
-                    {/* Option Scenario - 교통량 추가됨 */}
-                    <div className="flex justify-between items-center p-3 rounded-lg bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800">
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-violet-600"></div>
-                            <div>
-                                <div className="text-sm font-semibold text-violet-700 dark:text-violet-300">{t('optionScenario')}</div>
-                                <div className="text-xs text-violet-500 dark:text-violet-400 flex items-center gap-2">
-                                    <span>{t('speed')}: {optionSpeed.toFixed(1)} km/h</span>
-                                    <span className="w-px h-2 bg-violet-300 dark:bg-violet-700"></span>
-                                    <span className="flex items-center gap-1">
-                                      <Car className="w-3 h-3"/>
-                                      <span>Veh</span>
-                                      {routes[0].trafficVolumeOption.toLocaleString()}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="text-lg font-bold text-violet-700 dark:text-violet-300">
-                            {(() => {
-                                const duration = calculateDuration(routes[0].distance, optionSpeed);
-                                return <>{Math.floor(duration / 60)} <span className="text-xs font-normal">min</span> {duration % 60}<span className="text-xs font-normal">s</span></>;
-                            })()}
-                        </div>
-                    </div>
+                {/* Base vs Option Comparison Table (New) */}
+                <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-dashdark-border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-100 dark:bg-dashdark-sidebar text-slate-600 dark:text-dashdark-muted">
+                        <th className="px-3 py-2 text-left font-medium"></th>
+                        <th className="px-3 py-2 text-right font-medium text-slate-800 dark:text-white">{t('baseScenario')}</th>
+                        <th className="px-3 py-2 text-right font-medium text-violet-600 dark:text-violet-400">{t('optionScenario')}</th>
+                        <th className="px-3 py-2 text-right font-medium">{t('diff')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-dashdark-border bg-white dark:bg-dashdark-card">
+                      {/* 1. 차량 수 */}
+                      <tr>
+                        <td className="px-3 py-2 font-medium text-slate-600 dark:text-slate-300">{t('vehicleCount')}</td>
+                        <td className="px-3 py-2 text-right text-slate-800 dark:text-white">{routes[0].trafficVolumeBase.toLocaleString()}</td>
+                        <td className="px-3 py-2 text-right text-violet-600 dark:text-violet-400 font-bold">{routes[0].trafficVolumeOption.toLocaleString()}</td>
+                        <td className="px-3 py-2 text-right text-xs">
+                          {(() => {
+                            const diff = routes[0].trafficVolumeOption - routes[0].trafficVolumeBase;
+                            return <span className={diff > 0 ? "text-red-500" : "text-green-500"}>{diff > 0 ? '+' : ''}{diff}</span>
+                          })()}
+                        </td>
+                      </tr>
+                      {/* 2. 시간 (초 단위 -> 분:초) */}
+                      <tr>
+                        <td className="px-3 py-2 font-medium text-slate-600 dark:text-slate-300">{t('tcur')}</td>
+                        <td className="px-3 py-2 text-right text-slate-800 dark:text-white">
+                          {(() => {
+                            const d = calculateDuration(routes[0].distance, baseSpeed);
+                            return `${Math.floor(d/60)}m ${d%60}s`;
+                          })()}
+                        </td>
+                        <td className="px-3 py-2 text-right text-violet-600 dark:text-violet-400 font-bold">
+                          {(() => {
+                            const d = calculateDuration(routes[0].distance, optionSpeed);
+                            return `${Math.floor(d/60)}m ${d%60}s`;
+                          })()}
+                        </td>
+                        <td className="px-3 py-2 text-right text-xs">
+                          {(() => {
+                            const db = calculateDuration(routes[0].distance, baseSpeed);
+                            const do_ = calculateDuration(routes[0].distance, optionSpeed);
+                            const diff = do_ - db;
+                            return <span className={diff > 0 ? "text-red-500" : "text-green-500"}>{diff > 0 ? '+' : ''}{diff}s</span>
+                          })()}
+                        </td>
+                      </tr>
+                      {/* 3. 평균 속도 */}
+                      <tr>
+                        <td className="px-3 py-2 font-medium text-slate-600 dark:text-slate-300">{t('speed')}</td>
+                        <td className="px-3 py-2 text-right text-slate-800 dark:text-white">{baseSpeed.toFixed(1)} km/h</td>
+                        <td className="px-3 py-2 text-right text-violet-600 dark:text-violet-400 font-bold">{optionSpeed.toFixed(1)} km/h</td>
+                        <td className="px-3 py-2 text-right text-xs">
+                          {(() => {
+                            const diff = optionSpeed - baseSpeed;
+                            return <span className={diff < 0 ? "text-red-500" : "text-green-500"}>{diff > 0 ? '+' : ''}{diff.toFixed(1)}</span>
+                          })()}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
 
                 {/* 시간 단축 효과 표시 */}
