@@ -13,14 +13,12 @@ const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 export default function Comparison() {
   const { t } = useLanguage();
   
-  // 시뮬레이션 비교 데이터
   const { data: comparisons, isLoading: isComparisonsLoading } = useQuery({
     queryKey: ['simulationcomparison'],
     queryFn: () => axios.get(`${API_URL}/simulationcomparison`).then(res => res.data),
     initialData: [],
   });
 
-  // 지도용 교차로 데이터
   const { data: intersections, isLoading: isIntersectionsLoading } = useQuery({
     queryKey: ['intersections'],
     queryFn: () => axios.get(`${API_URL}/intersections`).then(res => res.data),
@@ -32,7 +30,6 @@ export default function Comparison() {
   const baseData = comparisons.find(c => c.scenario_name === 'Base') || {};
   const optionData = comparisons.find(c => c.scenario_name === 'Option') || {};
 
-  // 데이터 가공 및 새로운 지표 계산 함수
   const getMetricValue = (data, type) => {
     if (!data) return 0;
     const vol = data.total_volume || 0;
@@ -52,14 +49,15 @@ export default function Comparison() {
     }
   };
 
-  // 6가지 지표 설정 (순서 변경: VHT -> VKT -> 속도 -> 통행시간 -> 지체 -> 교통량)
+  // [수정됨] 지표 순서 및 아이콘/단위 설정
+  // 순서: VHT, VKT, 교통량(도착차량수), 통행시간, 속도, 지체시간
   const metrics = [
     { key: 'VHT', label: t('vht'), unit: 'veh-h', icon: Clock, decimals: 1 },
     { key: 'VKT', label: t('vkt'), unit: 'veh-km', icon: Activity, decimals: 0 },
-    { key: 'VCur', label: t('vcur'), unit: 'km/h', icon: Gauge, decimals: 1 },
-    { key: 'TCur', label: t('tcur'), unit: 's', icon: Timer, decimals: 0 },
-    { key: 'Delay', label: t('delay'), unit: 's', icon: TrendingDown, decimals: 1 },
     { key: 'Vol', label: t('volume'), unit: 'veh', icon: Car, decimals: 0 },
+    { key: 'TCur', label: t('tcur'), unit: 's', icon: Timer, decimals: 0 },
+    { key: 'VCur', label: t('vcur'), unit: 'km/h', icon: Gauge, decimals: 1 },
+    { key: 'Delay', label: t('delay'), unit: 's', icon: TrendingDown, decimals: 1 },
   ];
 
   const comparisonData = metrics.map(metric => {
@@ -67,17 +65,17 @@ export default function Comparison() {
     const optionVal = getMetricValue(optionData, metric.key);
     return {
       metric: metric.label, 
-      Base: parseFloat(baseVal.toFixed(metric.decimals)),
-      Option: parseFloat(optionVal.toFixed(metric.decimals)),
+      [t('base')]: parseFloat(baseVal.toFixed(metric.decimals)),
+      [t('option')]: parseFloat(optionVal.toFixed(metric.decimals)),
     };
   });
 
   const radarData = [
-    { subject: 'Volume', Base: 80, Option: 85 },
-    { subject: 'Speed', Base: 70, Option: 82 },
-    { subject: 'Delay', Base: 60, Option: 75 },
-    { subject: 'Efficiency', Base: 65, Option: 88 },
-    { subject: 'Safety', Base: 75, Option: 90 },
+    { subject: 'Volume', [t('base')]: 80, [t('option')]: 85 },
+    { subject: 'Speed', [t('base')]: 70, [t('option')]: 82 },
+    { subject: 'Delay', [t('base')]: 60, [t('option')]: 75 },
+    { subject: 'Efficiency', [t('base')]: 65, [t('option')]: 88 },
+    { subject: 'Safety', [t('base')]: 75, [t('option')]: 90 },
   ];
 
   const calculateDifference = (base, option) => {
@@ -111,13 +109,13 @@ export default function Comparison() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-200px)] min-h-[600px]">
         
-        {/* 왼쪽: 지도 (4열) */}
+        {/* 왼쪽: 지도 (4열) - 제목 변경됨 */}
         <div className="lg:col-span-4 h-full">
             <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg h-full flex flex-col">
                 <CardHeader className="border-b border-slate-100 dark:border-dashdark-border">
                   <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2">
                     <Activity className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                    {t('mapTitle')}
+                    {t('compMapTitle')} 
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 flex-1 relative overflow-hidden">
@@ -130,7 +128,6 @@ export default function Comparison() {
 
         {/* 오른쪽: 차트 및 통계 (8열) */}
         <div className="lg:col-span-8 space-y-6 overflow-y-auto">
-            {/* 상단: 6개 지표 카드 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {metrics.map(metric => {
                 const Icon = metric.icon;
@@ -152,13 +149,13 @@ export default function Comparison() {
                     <CardContent className="pb-4">
                         <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
-                            <span className="text-[10px] uppercase text-slate-400">Base</span>
+                            <span className="text-[10px] uppercase text-slate-400">{t('base')}</span>
                             <span className="text-base font-bold text-slate-700 dark:text-slate-200">
                             {baseValue.toLocaleString(undefined, { maximumFractionDigits: metric.decimals })} {metric.unit}
                             </span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-[10px] uppercase text-slate-400">Option</span>
+                            <span className="text-[10px] uppercase text-slate-400">{t('option')}</span>
                             <span className="text-base font-bold text-violet-600 dark:text-violet-400">
                             {optionValue.toLocaleString(undefined, { maximumFractionDigits: metric.decimals })} {metric.unit}
                             </span>
@@ -176,7 +173,6 @@ export default function Comparison() {
                 })}
             </div>
 
-            {/* 하단: 바 차트 & 레이더 차트 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
                     <CardHeader>
@@ -196,8 +192,8 @@ export default function Comparison() {
                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                             />
                             <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                            <Bar dataKey="Base" fill="#64748B" name="Base" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="Option" fill="#8B5CF6" name="Option" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey={t('base')} fill="#64748B" name={t('base')} radius={[4, 4, 0, 0]} />
+                            <Bar dataKey={t('option')} fill="#8B5CF6" name={t('option')} radius={[4, 4, 0, 0]} />
                         </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -216,8 +212,8 @@ export default function Comparison() {
                             <PolarGrid stroke="#e2e8f0" />
                             <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748B', fontSize: 12 }} />
                             <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#94a3b8" />
-                            <Radar name="Base" dataKey="Base" stroke="#64748B" strokeWidth={2} fill="#64748B" fillOpacity={0.3} />
-                            <Radar name="Option" dataKey="Option" stroke="#8B5CF6" strokeWidth={2} fill="#8B5CF6" fillOpacity={0.3} />
+                            <Radar name={t('base')} dataKey={t('base')} stroke="#64748B" strokeWidth={2} fill="#64748B" fillOpacity={0.3} />
+                            <Radar name={t('option')} dataKey={t('option')} stroke="#8B5CF6" strokeWidth={2} fill="#8B5CF6" fillOpacity={0.3} />
                             <Legend wrapperStyle={{ paddingTop: '10px' }} />
                             <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                         </RadarChart>

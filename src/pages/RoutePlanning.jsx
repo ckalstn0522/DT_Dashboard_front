@@ -6,7 +6,7 @@ import L from 'leaflet';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Route, Clock, Trash2, MapPin, Loader2, Lock, Unlock, Timer, Car } from 'lucide-react';
+import { Route, Clock, Trash2, MapPin, Loader2, Lock, Unlock, Timer, Car, ArrowRight } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -72,10 +72,8 @@ export default function RoutePlanning() {
 
   const baseData = comparisons.find(c => c.scenario_name === 'Base') || {};
   const optionData = comparisons.find(c => c.scenario_name === 'Option') || {};
-  
   const baseSpeed = baseData.avg_speed || 50; 
   const optionSpeed = optionData.avg_speed || 60;
-
   const center = [(36.640140 + 36.673372) / 2, (126.663909 + 126.687575) / 2];
 
   const fetchRoute = async (from, to) => {
@@ -149,8 +147,8 @@ export default function RoutePlanning() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="space-y-6 h-full flex flex-col">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t('routeTitle')}</h1>
           <p className="text-slate-600 dark:text-dashdark-muted mt-1">{t('routeDesc')}</p>
@@ -171,17 +169,17 @@ export default function RoutePlanning() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
-          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg overflow-hidden">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 flex-1 min-h-0">
+        {/* [수정됨] 맵 영역 확대 */}
+        <div className="xl:col-span-2 h-full min-h-[600px] flex flex-col">
+          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg overflow-hidden flex-1 flex flex-col">
             <CardHeader className="bg-slate-50 dark:bg-dashdark-sidebar border-b border-slate-100 dark:border-dashdark-border">
               <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white text-base">
                 <Route className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                {t('mapTitle')}
+                {t('routeMapTitle')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[700px]">
+            <CardContent className="p-0 flex-1 relative h-[800px]">
                 {isLoading ? <Skeleton className="w-full h-full" /> : (
                   <MapContainer center={center} zoom={14} style={{ height: '100%', width: '100%' }} scrollWheelZoom={!isScrollLocked}>
                     <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -194,12 +192,12 @@ export default function RoutePlanning() {
                     <ScrollWheelControl isLocked={isScrollLocked} onToggle={() => setIsScrollLocked(!isScrollLocked)} />
                   </MapContainer>
                 )}
-              </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="space-y-6">
+        {/* 오른쪽 정보 패널 */}
+        <div className="space-y-6 overflow-y-auto">
           <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
              <CardHeader className="border-b border-slate-100 dark:border-dashdark-border pb-4">
                <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2 text-base">
@@ -211,11 +209,9 @@ export default function RoutePlanning() {
                {selectedIntersections.length === 0 && <div className="text-center py-8 text-slate-400">{t('selectPrompt')}</div>}
                <div className="space-y-3">
                  {selectedIntersections.map((intersection, idx) => (
-                   <div key={intersection._id} className="p-4 bg-slate-50 dark:bg-dashdark-sidebar rounded-lg border border-slate-200 dark:border-dashdark-border">
-                     <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 bg-violet-600 text-white rounded-full flex items-center justify-center text-sm font-bold">{idx + 1}</div>
-                        <div className="font-semibold text-slate-900 dark:text-white">{intersection.intersection_name}</div>
-                     </div>
+                   <div key={intersection._id} className="p-4 bg-slate-50 dark:bg-dashdark-sidebar rounded-lg border border-slate-200 dark:border-dashdark-border flex items-center gap-3">
+                        <div className="w-8 h-8 bg-violet-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-sm">{idx + 1}</div>
+                        <div className="font-bold text-lg text-slate-900 dark:text-white">{intersection.intersection_name}</div>
                    </div>
                  ))}
                </div>
@@ -232,53 +228,55 @@ export default function RoutePlanning() {
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
                 
-                <div className="p-4 bg-slate-50 dark:bg-dashdark-sidebar rounded-xl border border-slate-200 dark:border-dashdark-border text-center">
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t('totalDist')}</div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {routes[0].distance} <span className="text-sm font-normal text-slate-500">km</span>
+                {/* [수정됨] 시인성 좋은 총 거리 카드 */}
+                <div className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-dashdark-sidebar dark:to-dashdark-card rounded-2xl border border-slate-200 dark:border-dashdark-border text-center shadow-sm">
+                  <div className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">{t('totalDist')}</div>
+                  <div className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    {routes[0].distance} <span className="text-lg font-medium text-slate-500">km</span>
                   </div>
                 </div>
 
-                {/* Base vs Option Comparison Table (New) */}
-                <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-dashdark-border">
+                <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-dashdark-border shadow-sm">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-slate-100 dark:bg-dashdark-sidebar text-slate-600 dark:text-dashdark-muted">
-                        <th className="px-3 py-2 text-left font-medium"></th>
-                        <th className="px-3 py-2 text-right font-medium text-slate-800 dark:text-white">{t('baseScenario')}</th>
-                        <th className="px-3 py-2 text-right font-medium text-violet-600 dark:text-violet-400">{t('optionScenario')}</th>
-                        <th className="px-3 py-2 text-right font-medium">{t('diff')}</th>
+                      <tr className="bg-slate-100 dark:bg-dashdark-sidebar text-slate-600 dark:text-dashdark-muted border-b border-slate-200 dark:border-dashdark-border">
+                        <th className="px-4 py-3 text-left font-semibold">Metric</th>
+                        <th className="px-4 py-3 text-right font-semibold text-slate-800 dark:text-white">{t('baseScenario')}</th>
+                        <th className="px-4 py-3 text-right font-semibold text-violet-600 dark:text-violet-400">{t('optionScenario')}</th>
+                        <th className="px-4 py-3 text-right font-semibold text-slate-500">{t('diff')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-dashdark-border bg-white dark:bg-dashdark-card">
-                      {/* 1. 차량 수 */}
-                      <tr>
-                        <td className="px-3 py-2 font-medium text-slate-600 dark:text-slate-300">{t('vehicleCount')}</td>
-                        <td className="px-3 py-2 text-right text-slate-800 dark:text-white">{routes[0].trafficVolumeBase.toLocaleString()}</td>
-                        <td className="px-3 py-2 text-right text-violet-600 dark:text-violet-400 font-bold">{routes[0].trafficVolumeOption.toLocaleString()}</td>
-                        <td className="px-3 py-2 text-right text-xs">
+                      <tr className="group hover:bg-slate-50 dark:hover:bg-dashdark-hover transition-colors">
+                        <td className="px-4 py-4 font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                           <Car className="w-4 h-4 text-slate-400"/> {t('vehicleCount')}
+                        </td>
+                        <td className="px-4 py-4 text-right text-slate-800 dark:text-white font-medium">{routes[0].trafficVolumeBase.toLocaleString()}</td>
+                        <td className="px-4 py-4 text-right text-violet-600 dark:text-violet-400 font-bold">{routes[0].trafficVolumeOption.toLocaleString()}</td>
+                        <td className="px-4 py-4 text-right text-xs font-semibold">
                           {(() => {
                             const diff = routes[0].trafficVolumeOption - routes[0].trafficVolumeBase;
                             return <span className={diff > 0 ? "text-red-500" : "text-green-500"}>{diff > 0 ? '+' : ''}{diff}</span>
                           })()}
                         </td>
                       </tr>
-                      {/* 2. 시간 (초 단위 -> 분:초) */}
-                      <tr>
-                        <td className="px-3 py-2 font-medium text-slate-600 dark:text-slate-300">{t('tcur')}</td>
-                        <td className="px-3 py-2 text-right text-slate-800 dark:text-white">
+                      <tr className="group hover:bg-slate-50 dark:hover:bg-dashdark-hover transition-colors">
+                        <td className="px-4 py-4 font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <Timer className="w-4 h-4 text-slate-400"/> {t('tcur')}
+                        </td>
+                        <td className="px-4 py-4 text-right text-slate-800 dark:text-white font-medium">
                           {(() => {
                             const d = calculateDuration(routes[0].distance, baseSpeed);
                             return `${Math.floor(d/60)}m ${d%60}s`;
                           })()}
                         </td>
-                        <td className="px-3 py-2 text-right text-violet-600 dark:text-violet-400 font-bold">
+                        <td className="px-4 py-4 text-right text-violet-600 dark:text-violet-400 font-bold">
                           {(() => {
                             const d = calculateDuration(routes[0].distance, optionSpeed);
                             return `${Math.floor(d/60)}m ${d%60}s`;
                           })()}
                         </td>
-                        <td className="px-3 py-2 text-right text-xs">
+                        <td className="px-4 py-4 text-right text-xs font-semibold">
                           {(() => {
                             const db = calculateDuration(routes[0].distance, baseSpeed);
                             const do_ = calculateDuration(routes[0].distance, optionSpeed);
@@ -287,12 +285,13 @@ export default function RoutePlanning() {
                           })()}
                         </td>
                       </tr>
-                      {/* 3. 평균 속도 */}
-                      <tr>
-                        <td className="px-3 py-2 font-medium text-slate-600 dark:text-slate-300">{t('speed')}</td>
-                        <td className="px-3 py-2 text-right text-slate-800 dark:text-white">{baseSpeed.toFixed(1)} km/h</td>
-                        <td className="px-3 py-2 text-right text-violet-600 dark:text-violet-400 font-bold">{optionSpeed.toFixed(1)} km/h</td>
-                        <td className="px-3 py-2 text-right text-xs">
+                      <tr className="group hover:bg-slate-50 dark:hover:bg-dashdark-hover transition-colors">
+                        <td className="px-4 py-4 font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <ArrowRight className="w-4 h-4 text-slate-400"/> {t('speed')}
+                        </td>
+                        <td className="px-4 py-4 text-right text-slate-800 dark:text-white font-medium">{baseSpeed.toFixed(1)} km/h</td>
+                        <td className="px-4 py-4 text-right text-violet-600 dark:text-violet-400 font-bold">{optionSpeed.toFixed(1)} km/h</td>
+                        <td className="px-4 py-4 text-right text-xs font-semibold">
                           {(() => {
                             const diff = optionSpeed - baseSpeed;
                             return <span className={diff < 0 ? "text-red-500" : "text-green-500"}>{diff > 0 ? '+' : ''}{diff.toFixed(1)}</span>
@@ -303,13 +302,14 @@ export default function RoutePlanning() {
                   </table>
                 </div>
 
-                {/* 시간 단축 효과 표시 */}
-                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center justify-between">
-                   <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                      <Timer className="w-4 h-4" />
-                      <span className="text-sm font-semibold">{t('timeGap')} (Base → Option)</span>
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center justify-between shadow-sm">
+                   <div className="flex items-center gap-3 text-emerald-700 dark:text-emerald-300">
+                      <div className="p-2 bg-emerald-100 dark:bg-emerald-800 rounded-lg">
+                        <Timer className="w-5 h-5" />
+                      </div>
+                      <span className="font-bold">{t('timeGap')}</span>
                    </div>
-                   <div className="font-bold text-green-700 dark:text-green-300">
+                   <div className="text-xl font-black text-emerald-700 dark:text-emerald-300">
                      {(() => {
                         const durationBase = calculateDuration(routes[0].distance, baseSpeed);
                         const durationOption = calculateDuration(routes[0].distance, optionSpeed);
