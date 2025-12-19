@@ -6,12 +6,13 @@ import L from 'leaflet';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Route, Clock, Trash2, MapPin, Loader2, Lock, Unlock } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
+import { useLanguage } from "@/context/LanguageContext";
 
 const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 
+// 아이콘 설정
 const intersectionIcon = new L.Icon({
   iconUrl: 'data:image/svg+xml;base64,' + btoa(`
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgb(139, 92, 246)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -36,29 +37,14 @@ const selectedIcon = new L.Icon({
 
 function ScrollWheelControl({ isLocked, onToggle }) {
   const map = useMap();
-  
   React.useEffect(() => {
-    if (isLocked) {
-      map.scrollWheelZoom.disable();
-    } else {
-      map.scrollWheelZoom.enable();
-    }
+    if (isLocked) map.scrollWheelZoom.disable();
+    else map.scrollWheelZoom.enable();
   }, [isLocked, map]);
-
   return (
     <div className="leaflet-top leaflet-right" style={{ marginTop: '80px', marginRight: '10px' }}>
       <div className="leaflet-control leaflet-bar">
-        <Button
-          onClick={onToggle}
-          size="sm"
-          variant={isLocked ? "default" : "secondary"}
-          className={`w-10 h-10 p-0 rounded-md shadow-lg border-0 ${
-            isLocked 
-              ? 'bg-red-500 hover:bg-red-600 text-white' 
-              : 'bg-white dark:bg-dashdark-card hover:bg-slate-100 dark:hover:bg-dashdark-hover text-slate-700 dark:text-white'
-          }`}
-          title={isLocked ? "스크롤 확대/축소 잠김" : "스크롤 확대/축소 활성화"}
-        >
+        <Button onClick={onToggle} size="sm" variant={isLocked ? "default" : "secondary"} className={`w-10 h-10 p-0 rounded-md shadow-lg border-0 ${isLocked ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-white dark:bg-dashdark-card hover:bg-slate-100 dark:hover:bg-dashdark-hover text-slate-700 dark:text-white'}`}>
           {isLocked ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
         </Button>
       </div>
@@ -67,71 +53,67 @@ function ScrollWheelControl({ isLocked, onToggle }) {
 }
 
 export default function RoutePlanning() {
+  const { t } = useLanguage();
   const [selectedIntersections, setSelectedIntersections] = useState([]);
   const [routes, setRoutes] = useState([]);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
   const [isScrollLocked, setIsScrollLocked] = useState(true);
 
+  // 1. 교차로 데이터 조회
   const { data: intersections, isLoading } = useQuery({
     queryKey: ['intersections'],
     queryFn: () => axios.get(`${API_URL}/intersections`).then(res => res.data),
     initialData: [],
   });
 
-  const center = [
-    (36.640140 + 36.673372) / 2,
-    (126.663909 + 126.687575) / 2
-  ];
+  // 2. 시뮬레이션 비교 데이터 조회 (평균 속도 가져오기 위함)
+  const { data: comparisons } = useQuery({
+    queryKey: ['simulationcomparison'],
+    queryFn: () => axios.get(`${API_URL}/simulationcomparison`).then(res => res.data),
+    initialData: [],
+  });
 
-  // ▼▼▼ [수정] 양방향 최단 경로 탐색 로직 적용 ▼▼▼
+  // DB에서 가져온 속도값 적용 (데이터가 없으면 기본값 50/60 사용)
+  const baseData = comparisons.find(c => c.scenario_name === 'Base') || {};
+  const optionData = comparisons.find(c => c.scenario_name === 'Option') || {};
+  
+  const baseSpeed = baseData.avg_speed || 50; 
+  const optionSpeed = optionData.avg_speed || 60;
+
+  const center = [(36.640140 + 36.673372) / 2, (126.663909 + 126.687575) / 2];
+
+  // 경로 탐색 API 호출
   const fetchRoute = async (from, to) => {
     setIsLoadingRoute(true);
     const fromCoords = { latitude: parseFloat(from.latitude), longitude: parseFloat(from.longitude) };
     const toCoords = { latitude: parseFloat(to.latitude), longitude: parseFloat(to.longitude) };
 
     try {
-      // 1. OSRM API URL 생성 (driving 모드 사용, radiuses 옵션으로 도로 스내핑 강화)
-      // A -> B
       const urlForward = `https://router.project-osrm.org/route/v1/driving/${fromCoords.longitude},${fromCoords.latitude};${toCoords.longitude},${toCoords.latitude}?overview=full&geometries=geojson&radiuses=1000;1000`;
-      // B -> A (역방향)
       const urlBackward = `https://router.project-osrm.org/route/v1/driving/${toCoords.longitude},${toCoords.latitude};${fromCoords.longitude},${fromCoords.latitude}?overview=full&geometries=geojson&radiuses=1000;1000`;
       
-      // 2. 두 경로 동시 요청
-      const [resForward, resBackward] = await Promise.all([
-        fetch(urlForward),
-        fetch(urlBackward)
-      ]);
-
+      const [resForward, resBackward] = await Promise.all([fetch(urlForward), fetch(urlBackward)]);
       const dataForward = await resForward.json();
       const dataBackward = await resBackward.json();
       
       let bestRoute = null;
-
-      // 3. 유효한 경로 중 더 짧은 경로 선택
       const route1 = dataForward.code === 'Ok' && dataForward.routes[0];
       const route2 = dataBackward.code === 'Ok' && dataBackward.routes[0];
 
-      if (route1 && route2) {
-        // 둘 다 성공하면 거리가 더 짧은 쪽 선택 (U턴 회피)
-        bestRoute = route1.distance <= route2.distance ? route1 : route2;
-      } else if (route1) {
-        bestRoute = route1;
-      } else if (route2) {
-        bestRoute = route2;
-      }
+      if (route1 && route2) bestRoute = route1.distance <= route2.distance ? route1 : route2;
+      else if (route1) bestRoute = route1;
+      else if (route2) bestRoute = route2;
 
       if (bestRoute) {
         const routeGeometry = bestRoute.geometry.coordinates;
         const positions = routeGeometry.map(coord => [coord[1], coord[0]]);
         const distanceKm = bestRoute.distance / 1000;
         
-        // 예상 시간 (평균 50km/h 가정)
-        const duration = Math.round((distanceKm / 50) * 3600);
-
+        // *주의: 여기서 시간을 계산하지 않고 거리만 반환합니다.
+        // 속도 데이터가 로딩되기 전일 수도 있고, 화면 렌더링 시점의 최신 baseSpeed/optionSpeed를 쓰기 위함입니다.
         return {
           positions,
           distance: distanceKm.toFixed(2),
-          duration: duration,
         };
       }
     } catch (error) {
@@ -139,25 +121,7 @@ export default function RoutePlanning() {
     } finally {
       setIsLoadingRoute(false);
     }
-    
-    // 실패 시 직선 거리 Fallback
-    return {
-      positions: [[fromCoords.latitude, fromCoords.longitude], [toCoords.latitude, toCoords.longitude]],
-      distance: calculateDistance(fromCoords, toCoords),
-      duration: null,
-    };
-  };
-  // ▲▲▲ [수정 완료] ▲▲▲
-
-  const calculateDistance = (from, to) => {
-    const R = 6371;
-    const dLat = (parseFloat(to.latitude) - parseFloat(from.latitude)) * Math.PI / 180;
-    const dLon = (parseFloat(to.longitude) - parseFloat(from.longitude)) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(parseFloat(from.latitude) * Math.PI / 180) * Math.cos(parseFloat(to.latitude) * Math.PI / 180) *
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return (R * c).toFixed(2);
+    return null;
   };
 
   const handleMarkerClick = async (intersection) => {
@@ -168,34 +132,12 @@ export default function RoutePlanning() {
       const newSelection = [...selectedIntersections, intersection];
       setSelectedIntersections(newSelection);
       const routeData = await fetchRoute(selectedIntersections[0], intersection);
-      const route = {
-        from: selectedIntersections[0],
-        to: intersection,
-        positions: routeData.positions,
-        distance: routeData.distance,
-        duration: routeData.duration,
-        data: generateTravelTimeData(routeData.distance)
-      };
-      setRoutes([route]);
+      if (routeData) {
+        setRoutes([routeData]);
+      }
     } else {
       setSelectedIntersections([intersection]);
     }
-  };
-
-  const generateTravelTimeData = (distance) => {
-    const hours = ['07:00', '08:00', '09:00', '12:00', '17:00', '18:00', '19:00'];
-    const baseTime = parseFloat(distance) * 60;
-    return hours.map((hour) => {
-      let multiplier = 1;
-      if (hour === '08:00' || hour === '18:00') multiplier = 1.8;
-      else if (hour === '09:00' || hour === '17:00' || hour === '19:00') multiplier = 1.5;
-      else if (hour === '07:00') multiplier = 1.3;
-      return {
-        time: hour,
-        travelTime: Math.round(baseTime * multiplier + (Math.random() * 20 - 10)),
-        distance: distance,
-      };
-    });
   };
 
   const clearSelection = () => {
@@ -203,34 +145,31 @@ export default function RoutePlanning() {
     setRoutes([]);
   };
 
+  // 렌더링 시점에 계산된 시간 (초 단위)
+  const calculateDuration = (distKm, speedKmh) => {
+    if (!speedKmh || speedKmh === 0) return 0;
+    return Math.round((distKm / speedKmh) * 3600);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-            경로 분석
-          </h1>
-          <p className="text-slate-600 dark:text-dashdark-muted mt-1">두 교차로를 선택하여 최단 도로 경로의 통행시간을 분석하세요</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t('routeTitle')}</h1>
+          <p className="text-slate-600 dark:text-dashdark-muted mt-1">{t('routeDesc')}</p>
         </div>
         {selectedIntersections.length > 0 && (
-          <Button 
-            variant="outline" 
-            onClick={clearSelection}
-            className="flex items-center gap-2 dark:bg-dashdark-card dark:border-dashdark-border dark:text-white dark:hover:bg-dashdark-hover"
-          >
-            <Trash2 className="w-4 h-4" />
-            선택 초기화
+          <Button variant="outline" onClick={clearSelection} className="flex items-center gap-2 dark:bg-dashdark-card dark:border-dashdark-border dark:text-white">
+            <Trash2 className="w-4 h-4" /> {t('resetSelection')}
           </Button>
         )}
       </div>
 
       {isLoadingRoute && (
         <Card className="bg-gradient-to-r from-violet-500 to-indigo-600 text-white border-none shadow-lg">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="font-medium">도로 경로를 계산하는 중...</span>
-            </div>
+          <CardContent className="p-4 flex items-center gap-3">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="font-medium">{t('calculating')}</span>
           </CardContent>
         </Card>
       )}
@@ -241,40 +180,21 @@ export default function RoutePlanning() {
             <CardHeader className="bg-slate-50 dark:bg-dashdark-sidebar border-b border-slate-100 dark:border-dashdark-border">
               <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white text-base">
                 <Route className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                경로 선택 맵 (실제 도로 기반)
+                {t('mapTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="h-[700px]">
-                {isLoading ? (
-                  <Skeleton className="w-full h-full bg-slate-200 dark:bg-dashdark-bg" />
-                ) : (
-                  <MapContainer 
-                    center={center} 
-                    zoom={14} 
-                    style={{ height: '100%', width: '100%' }}
-                    scrollWheelZoom={!isScrollLocked}
-                  >
-                    <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {isLoading ? <Skeleton className="w-full h-full" /> : (
+                  <MapContainer center={center} zoom={14} style={{ height: '100%', width: '100%' }} scrollWheelZoom={!isScrollLocked}>
+                    <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     {intersections.map((intersection) => (
-                      <Marker
-                        key={intersection._id} 
-                        position={[parseFloat(intersection.latitude), parseFloat(intersection.longitude)]}
-                        icon={selectedIntersections.find(s => s._id === intersection._id) ? selectedIcon : intersectionIcon}
-                        eventHandlers={{ click: () => handleMarkerClick(intersection) }}
-                      />
+                      <Marker key={intersection._id} position={[parseFloat(intersection.latitude), parseFloat(intersection.longitude)]} icon={selectedIntersections.find(s => s._id === intersection._id) ? selectedIcon : intersectionIcon} eventHandlers={{ click: () => handleMarkerClick(intersection) }} />
                     ))}
                     {routes.map((route, idx) => (
-                      <Polyline
-                        key={idx}
-                        positions={route.positions}
-                        pathOptions={{ color: 'rgb(139, 92, 246)', weight: 5, opacity: 0.9 }}
-                      />
+                      <Polyline key={idx} positions={route.positions} pathOptions={{ color: 'rgb(139, 92, 246)', weight: 5, opacity: 0.9 }} />
                     ))}
-                    <ScrollWheelControl 
-                      isLocked={isScrollLocked} 
-                      onToggle={() => setIsScrollLocked(!isScrollLocked)} 
-                    />
+                    <ScrollWheelControl isLocked={isScrollLocked} onToggle={() => setIsScrollLocked(!isScrollLocked)} />
                   </MapContainer>
                 )}
               </div>
@@ -284,73 +204,78 @@ export default function RoutePlanning() {
 
         <div className="space-y-6">
           <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
-            <CardHeader className="border-b border-slate-100 dark:border-dashdark-border pb-4">
-              <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2 text-base">
-                <MapPin className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                선택된 교차로
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="space-y-3">
-                {selectedIntersections.length === 0 && (
-                  <div className="text-center py-8 text-slate-400 dark:text-slate-500">
-                    <p>지도에서 교차로를 선택해주세요</p>
-                    <p className="text-xs mt-2">(최대 2개)</p>
-                  </div>
-                )}
-                {selectedIntersections.map((intersection, idx) => (
-                  <div key={intersection._id} className="p-4 bg-slate-50 dark:bg-dashdark-sidebar rounded-lg border border-slate-200 dark:border-dashdark-border">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 bg-violet-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                        {idx + 1}
-                      </div>
-                      <div className="font-semibold text-slate-900 dark:text-white">
-                        {intersection.intersection_name}
-                      </div>
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      {parseFloat(intersection.latitude).toFixed(6)}°, {parseFloat(intersection.longitude).toFixed(6)}°
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
+             <CardHeader className="border-b border-slate-100 dark:border-dashdark-border pb-4">
+               <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2 text-base">
+                 <MapPin className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                 {t('selectedInt')}
+               </CardTitle>
+             </CardHeader>
+             <CardContent className="pt-4">
+               {selectedIntersections.length === 0 && <div className="text-center py-8 text-slate-400">{t('selectPrompt')}</div>}
+               <div className="space-y-3">
+                 {selectedIntersections.map((intersection, idx) => (
+                   <div key={intersection._id} className="p-4 bg-slate-50 dark:bg-dashdark-sidebar rounded-lg border border-slate-200 dark:border-dashdark-border">
+                     <div className="flex items-center gap-2 mb-2">
+                        <div className="w-6 h-6 bg-violet-600 text-white rounded-full flex items-center justify-center text-sm font-bold">{idx + 1}</div>
+                        <div className="font-semibold text-slate-900 dark:text-white">{intersection.intersection_name}</div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </CardContent>
           </Card>
 
-          {routes.length > 0 && routes[0].data && (
+          {routes.length > 0 && (
             <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
               <CardHeader className="border-b border-slate-100 dark:border-dashdark-border pb-4">
                 <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2 text-base">
                   <Clock className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                  경로 정보 및 통행 시간
+                  {t('routeInfo')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 bg-slate-50 dark:bg-dashdark-sidebar rounded-xl border border-slate-200 dark:border-dashdark-border">
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">총 거리</div>
-                    <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                      {routes[0].distance} <span className="text-sm font-normal text-slate-500">km</span>
-                    </div>
-                  </div>
-                  <div className="p-4 bg-slate-50 dark:bg-dashdark-sidebar rounded-xl border border-slate-200 dark:border-dashdark-border">
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">평균 소요</div>
-                    <div className="text-2xl font-bold text-violet-600 dark:text-violet-400">
-                      {(routes[0].data.reduce((sum, d) => sum + d.travelTime, 0) / routes[0].data.length).toFixed(0)} <span className="text-sm font-normal text-slate-500 dark:text-slate-400">초</span>
-                    </div>
+                
+                <div className="p-4 bg-slate-50 dark:bg-dashdark-sidebar rounded-xl border border-slate-200 dark:border-dashdark-border text-center">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t('totalDist')}</div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {routes[0].distance} <span className="text-sm font-normal text-slate-500">km</span>
                   </div>
                 </div>
 
-                <div className="h-[250px] w-full">
-                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={routes[0].data}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#2A303F" vertical={false} />
-                      <XAxis dataKey="time" tick={{fill: '#94A3B8', fontSize: 12}} axisLine={false} tickLine={false} dy={10} />
-                      <YAxis tick={{fill: '#94A3B8', fontSize: 12}} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={{ backgroundColor: '#1E2330', borderColor: '#2A303F', color: '#fff' }} itemStyle={{ color: '#fff' }} />
-                      <Line type="monotone" dataKey="travelTime" stroke="#8B5CF6" strokeWidth={3} dot={{ fill: '#8B5CF6', r: 4, strokeWidth: 0 }} activeDot={{ r: 6, fill: '#fff' }} />
-                    </LineChart>
-                  </ResponsiveContainer>
+                <div className="space-y-3">
+                    {/* Base Scenario */}
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-slate-100 dark:bg-dashdark-bg border border-slate-200 dark:border-dashdark-border">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-slate-500"></div>
+                            <div>
+                                <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{t('baseScenario')}</div>
+                                <div className="text-xs text-slate-500">{t('speed')}: {baseSpeed.toFixed(1)} km/h</div>
+                            </div>
+                        </div>
+                        <div className="text-lg font-bold text-slate-700 dark:text-slate-200">
+                           {(() => {
+                                const duration = calculateDuration(routes[0].distance, baseSpeed);
+                                return <>{Math.floor(duration / 60)} <span className="text-xs font-normal">min</span> {duration % 60}<span className="text-xs font-normal">s</span></>;
+                            })()}
+                        </div>
+                    </div>
+
+                    {/* Option Scenario */}
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-violet-600"></div>
+                            <div>
+                                <div className="text-sm font-semibold text-violet-700 dark:text-violet-300">{t('optionScenario')}</div>
+                                <div className="text-xs text-violet-500 dark:text-violet-400">{t('speed')}: {optionSpeed.toFixed(1)} km/h</div>
+                            </div>
+                        </div>
+                        <div className="text-lg font-bold text-violet-700 dark:text-violet-300">
+                            {(() => {
+                                const duration = calculateDuration(routes[0].distance, optionSpeed);
+                                return <>{Math.floor(duration / 60)} <span className="text-xs font-normal">min</span> {duration % 60}<span className="text-xs font-normal">s</span></>;
+                            })()}
+                        </div>
+                    </div>
                 </div>
               </CardContent>
             </Card>

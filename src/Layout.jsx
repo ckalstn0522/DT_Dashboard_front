@@ -1,11 +1,12 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { LayoutDashboard, Route, GitCompare, BarChart3, Map } from "lucide-react";
+import { LayoutDashboard, Route, GitCompare, BarChart3, Map, Globe } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import DateSelector from "@/components/dashboard/DateSelector";
 import TimePeriodSelector from "@/components/dashboard/TimePeriodSelector";
 import { useFilter } from "@/context/FilterContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   Sidebar,
   SidebarContent,
@@ -19,12 +20,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-
-const navigationItems = [
-  { title: "메인 대시보드", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
-  { title: "경로 분석", url: createPageUrl("RoutePlanning"), icon: Route },
-  { title: "시뮬레이션 비교", url: createPageUrl("Comparison"), icon: GitCompare },
-];
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Layout({ children }) {
   const location = useLocation();
@@ -34,6 +30,14 @@ export default function Layout({ children }) {
     availableDates, availableTimePeriods, 
     isSelectionEnabled 
   } = useFilter();
+  
+  const { language, setLanguage, t } = useLanguage();
+
+  const navigationItems = [
+    { title: t('mainDashboard'), url: createPageUrl("Dashboard"), icon: LayoutDashboard },
+    { title: t('routePlanning'), url: createPageUrl("RoutePlanning"), icon: Route },
+    { title: t('simComparison'), url: createPageUrl("Comparison"), icon: GitCompare },
+  ];
 
   return (
     <SidebarProvider>
@@ -46,8 +50,8 @@ export default function Layout({ children }) {
                 <Map className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="font-bold text-slate-900 dark:text-dashdark-text text-lg tracking-tight">교통 데이터</h2>
-                <p className="text-xs text-slate-500 dark:text-dashdark-muted">시각화 대시보드</p>
+                <h2 className="font-bold text-slate-900 dark:text-dashdark-text text-lg tracking-tight">{t('trafficData')}</h2>
+                <p className="text-xs text-slate-500 dark:text-dashdark-muted">{t('dashboard')}</p>
               </div>
             </div>
           </SidebarHeader>
@@ -55,14 +59,14 @@ export default function Layout({ children }) {
           <SidebarContent className="p-3 flex flex-col h-full">
             <SidebarGroup>
               <SidebarGroupLabel className="text-xs font-semibold text-slate-500 dark:text-dashdark-muted uppercase tracking-wider px-3 py-2">
-                Analytics
+                {t('analytics')}
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {navigationItems.map((item) => {
                     const isActive = location.pathname === item.url;
                     return (
-                      <SidebarMenuItem key={item.title}>
+                      <SidebarMenuItem key={item.url}>
                         <SidebarMenuButton 
                           asChild 
                           className={`w-full block transition-all duration-200 rounded-xl mb-1 ${
@@ -89,7 +93,7 @@ export default function Layout({ children }) {
                 <div className="mx-3 px-4 py-4 bg-slate-100 dark:bg-dashdark-card rounded-xl border border-slate-200 dark:border-dashdark-border">
                   <div className="flex items-center gap-2 mb-2">
                     <BarChart3 className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-                    <span className="text-xs font-semibold text-slate-700 dark:text-dashdark-text">연구 범위</span>
+                    <span className="text-xs font-semibold text-slate-700 dark:text-dashdark-text">{t('researchScope')}</span>
                   </div>
                   <div className="text-xs text-slate-500 dark:text-dashdark-muted space-y-1 font-mono">
                     <div>NW: 36.673, 126.664</div>
@@ -101,7 +105,7 @@ export default function Layout({ children }) {
 
             <SidebarGroup className="mt-2">
               <SidebarGroupLabel className="text-xs font-semibold text-slate-500 dark:text-dashdark-muted uppercase tracking-wider px-3 py-2">
-                Data Filter
+                {t('dataFilter')}
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <div className="px-3 space-y-4">
@@ -121,9 +125,26 @@ export default function Layout({ children }) {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            <div className="mt-auto p-4 border-t border-slate-200 dark:border-dashdark-border flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-600 dark:text-dashdark-muted">테마 설정</span>
-                <ModeToggle />
+            <div className="mt-auto p-4 space-y-3 border-t border-slate-200 dark:border-dashdark-border">
+                <div className="flex items-center justify-between">
+                   <span className="text-sm font-medium text-slate-600 dark:text-dashdark-muted flex items-center gap-2">
+                     <Globe className="w-4 h-4"/> {t('language')}
+                   </span>
+                   <Select value={language} onValueChange={setLanguage}>
+                      <SelectTrigger className="w-[100px] h-8 text-xs bg-white dark:bg-dashdark-bg">
+                        <SelectValue placeholder="Language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ko">한국어</SelectItem>
+                        <SelectItem value="en">English</SelectItem>
+                      </SelectContent>
+                   </Select>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-slate-600 dark:text-dashdark-muted">{t('theme')}</span>
+                    <ModeToggle />
+                </div>
             </div>
           </SidebarContent>
         </Sidebar>
@@ -133,7 +154,7 @@ export default function Layout({ children }) {
             <div className="flex items-center gap-4">
               <SidebarTrigger className="hover:bg-slate-100 dark:hover:bg-dashdark-hover p-2 rounded-lg transition-colors duration-200 dark:text-dashdark-text" />
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-                교통 데이터
+                {t('trafficData')}
               </h1>
             </div>
             <ModeToggle />
