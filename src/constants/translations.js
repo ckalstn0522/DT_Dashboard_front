@@ -4,7 +4,7 @@ export const translations = {
     trafficData: "교통 데이터",
     dashboard: "시각화 대시보드",
     analytics: "분석",
-    mainDashboard: "메인 대시보드",
+    mainDashboard: "교차로 성능 평가",
     routePlanning: "경로 분석",
     simComparison: "시뮬레이션 비교",
     researchScope: "연구 범위",
@@ -55,6 +55,7 @@ export const translations = {
     kpiDataTemp: "데이터(임시)",
     kpiFilterTemp: "필터링(임시)",
     dashMapTitle: "연구 범위 맵",
+    intersectionDataTitle: "교차로별 교통 데이터", // [추가됨]
     
     // Common Terms
     base: "Before", // [변경]
@@ -73,7 +74,7 @@ export const translations = {
     trafficData: "Traffic Data",
     dashboard: "Visualization Dashboard",
     analytics: "Analytics",
-    mainDashboard: "Main Dashboard",
+    mainDashboard: "Intersection Performance Evaluation",
     routePlanning: "Route Planning",
     simComparison: "Simulation Comparison",
     researchScope: "Research Scope",
@@ -124,6 +125,7 @@ export const translations = {
     kpiDataTemp: "Data (Temp)",
     kpiFilterTemp: "Filtering (Temp)",
     dashMapTitle: "Research Scope Map",
+    intersectionDataTitle: "Intersection Traffic Data", // [추가됨]
 
     // Common Terms
     base: "Before", // [Change]

@@ -2,8 +2,11 @@ import React from "react";
 import axios from 'axios';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
-import { GitCompare, TrendingDown, TrendingUp, Activity, Clock, Gauge, Car, Timer } from 'lucide-react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, LabelList
+} from 'recharts';
+import { TrendingDown, TrendingUp, Activity, Clock, Gauge, Car, Timer } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/context/LanguageContext";
 import IntersectionMap from "@/components/dashboard/IntersectionMap";
@@ -49,72 +52,199 @@ export default function Comparison() {
     }
   };
 
-  // [수정됨] 지표 순서 및 아이콘/단위 설정
-  // 순서: VHT, VKT, 교통량(도착차량수), 통행시간, 속도, 지체시간
+  const calculateDifference = (base, option) => {
+    if (!base) return 0;
+    return ((option - base) / base * 100).toFixed(1);
+  };
+
+  // 요청하신 배치 순서대로 배열 정의
+  // 1행: VHT, VKT
+  // 2행: Vol, TCur
+  // 3행: VCur, Delay
   const metrics = [
-    { key: 'VHT', label: t('vht'), unit: 'veh-h', icon: Clock, decimals: 1 },
-    { key: 'VKT', label: t('vkt'), unit: 'veh-km', icon: Activity, decimals: 0 },
+    { key: 'VHT', label: t('vht'), unit: 'h', icon: Clock, decimals: 1 },
+    { key: 'VKT', label: t('vkt'), unit: 'km', icon: Activity, decimals: 0 },
     { key: 'Vol', label: t('volume'), unit: 'veh', icon: Car, decimals: 0 },
     { key: 'TCur', label: t('tcur'), unit: 's', icon: Timer, decimals: 0 },
     { key: 'VCur', label: t('vcur'), unit: 'km/h', icon: Gauge, decimals: 1 },
     { key: 'Delay', label: t('delay'), unit: 's', icon: TrendingDown, decimals: 1 },
   ];
 
-  const comparisonData = metrics.map(metric => {
-    const baseVal = getMetricValue(baseData, metric.key);
-    const optionVal = getMetricValue(optionData, metric.key);
-    return {
-      metric: metric.label, 
-      [t('base')]: parseFloat(baseVal.toFixed(metric.decimals)),
-      [t('option')]: parseFloat(optionVal.toFixed(metric.decimals)),
-    };
-  });
-
-  const radarData = [
-    { subject: 'Volume', [t('base')]: 80, [t('option')]: 85 },
-    { subject: 'Speed', [t('base')]: 70, [t('option')]: 82 },
-    { subject: 'Delay', [t('base')]: 60, [t('option')]: 75 },
-    { subject: 'Efficiency', [t('base')]: 65, [t('option')]: 88 },
-    { subject: 'Safety', [t('base')]: 75, [t('option')]: 90 },
-  ];
-
-  const calculateDifference = (base, option) => {
-    if (!base) return 0;
-    return ((option - base) / base * 100).toFixed(1);
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-10 w-1/3 bg-slate-200 dark:bg-dashdark-card" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-             <Skeleton className="h-[500px] w-full col-span-1 bg-slate-200 dark:bg-dashdark-card" />
-             <div className="col-span-2 space-y-6">
-                <Skeleton className="h-40 w-full bg-slate-200 dark:bg-dashdark-card" />
-                <Skeleton className="h-40 w-full bg-slate-200 dark:bg-dashdark-card" />
+        <Skeleton className="h-10 w-1/3" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+             <div className="lg:col-span-4"><Skeleton className="h-[600px] w-full" /></div>
+             <div className="lg:col-span-8 space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-[250px] w-full" />)}
+                </div>
              </div>
         </div>
       </div>
     );
   }
 
+  // --- 시각화 컴포넌트 ---
+
+  const RenderSimpleBar = ({ base, option, unit, color }) => {
+    const data = [
+      { name: 'BEFORE', value: base },
+      { name: 'AFTER', value: option }
+    ];
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 20, right: 20, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+          <XAxis dataKey="name" tick={{fontSize: 12, fontWeight: 'bold'}} axisLine={false} tickLine={false} />
+          <YAxis tick={{fontSize: 11}} axisLine={false} tickLine={false} width={30} />
+          <Tooltip cursor={{fill: 'transparent'}} contentStyle={{borderRadius: '8px', border:'none', boxShadow:'0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+          <Bar dataKey="value" fill={color} radius={[6, 6, 0, 0]} barSize={50}>
+            <LabelList dataKey="value" position="top" fill="#64748b" fontSize={12} fontWeight="bold" />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  const RenderVolumeChart = () => {
+    return (
+        <div className="grid grid-cols-2 h-full items-center relative w-full">
+             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2/3 w-px bg-slate-200 dark:bg-slate-700"></div>
+             <div className="flex flex-col items-center justify-center w-full h-full">
+                <div className="p-5 bg-slate-50 dark:bg-slate-800 rounded-full shadow-sm">
+                    <Car className="w-12 h-12 text-slate-400" />
+                </div>
+             </div>
+             <div className="flex flex-col items-center justify-center w-full h-full">
+                <div className="p-5 bg-violet-50 dark:bg-violet-900/20 rounded-full shadow-sm">
+                    <Car className="w-14 h-14 text-violet-500" />
+                </div>
+             </div>
+        </div>
+    );
+  };
+
+  const RenderGaugeChart = ({ base, option }) => {
+    const MAX_SPEED = 200; 
+    const baseVal = Math.min(base, MAX_SPEED);
+    const optionVal = Math.min(option, MAX_SPEED);
+    const data = [
+      { name: 'BEFORE', value: baseVal, color: '#94a3b8' },
+      { name: 'AFTER', value: optionVal, color: '#8b5cf6' }
+    ];
+
+    return (
+      <div className="grid grid-cols-2 h-full items-end pb-2 w-full">
+        {data.map((item) => (
+          <div key={item.name} className="flex flex-col items-center justify-end w-full h-full relative">
+            <div className="w-[120px] h-[120px] lg:w-[140px] lg:h-[140px]">
+                <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                    <Pie
+                    data={[{ val: item.value }, { val: MAX_SPEED - item.value }]}
+                    cx="50%" 
+                    cy="85%"  
+                    startAngle={180} 
+                    endAngle={0}
+                    innerRadius="60%" 
+                    outerRadius="90%" 
+                    dataKey="val" 
+                    stroke="none"
+                    >
+                    <Cell fill={item.color} />
+                    <Cell fill="#e2e8f0" />
+                    </Pie>
+                </PieChart>
+                </ResponsiveContainer>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const RenderTimeDisplay = () => {
+     return (
+        <div className="grid grid-cols-2 h-full items-center relative w-full">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2/3 w-px bg-slate-200 dark:bg-slate-700"></div>
+            <div className="flex flex-col items-center justify-center w-full h-full">
+                <div className="relative flex items-center justify-center w-20 h-20 rounded-full border-4 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                    <Clock className="w-8 h-8 text-slate-400" />
+                </div>
+            </div>
+            <div className="flex flex-col items-center justify-center w-full h-full">
+                <div className="relative flex items-center justify-center w-24 h-24 rounded-full border-4 border-violet-500 shadow-lg bg-violet-50 dark:bg-violet-900/20">
+                    <Timer className="w-10 h-10 text-violet-600 dark:text-violet-400" />
+                </div>
+            </div>
+        </div>
+     );
+  };
+
+  const RenderLollipopChart = ({ base, option }) => {
+    const data = [
+        { name: 'BEFORE', value: base, fill: '#ef4444' }, 
+        { name: 'AFTER', value: option, fill: base > option ? '#22c55e' : '#ef4444' } 
+    ];
+
+    return (
+        <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+                layout="vertical"
+                data={data}
+                margin={{ top: 20, right: 20, left: 20, bottom: 5 }}
+                barSize={12} 
+            >
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={true} stroke="#e2e8f0" />
+                <XAxis type="number" tick={{fontSize: 11}} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" width={50} tick={{fontSize: 11, fontWeight: 'bold'}} axisLine={false} tickLine={false} />
+                <Tooltip cursor={{fill: 'transparent'}} contentStyle={{borderRadius: '8px'}} />
+                <Bar dataKey="value" fill="#e2e8f0" background={{ fill: 'transparent' }} radius={[0, 10, 10, 0]}>
+                   <LabelList dataKey="value" position="right" style={{ fontSize: 11, fontWeight: 'bold', fill: '#64748b' }} />
+                </Bar>
+                 <Bar dataKey="value" radius={[10, 10, 10, 10]} barSize={10} >
+                     {
+                        data.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))
+                     }
+                 </Bar>
+            </BarChart>
+        </ResponsiveContainer>
+    );
+  };
+
+  const renderVisualization = (metric, baseVal, optionVal) => {
+    switch(metric.key) {
+        case 'VHT': return <RenderSimpleBar base={baseVal} option={optionVal} unit="h" color="#8b5cf6" />;
+        case 'VKT': return <RenderSimpleBar base={baseVal} option={optionVal} unit="km" color="#3b82f6" />;
+        case 'Vol': return <RenderVolumeChart />;
+        case 'TCur': return <RenderTimeDisplay />;
+        case 'VCur': return <RenderGaugeChart base={baseVal} option={optionVal} />;
+        case 'Delay': return <RenderLollipopChart base={baseVal} option={optionVal} />;
+        default: return null;
+    }
+  };
+
   return (
-    <div className="max-w-[1800px] mx-auto space-y-6">
+    <div className="max-w-[1800px] mx-auto space-y-4 h-full pb-4">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
           {t('compTitle')}
         </h1>
-        <p className="text-slate-600 dark:text-dashdark-muted mt-1">{t('compDesc')}</p>
+        <p className="text-sm text-slate-600 dark:text-dashdark-muted mt-0.5">{t('compDesc')}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-200px)] min-h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[500px]">
         
-        {/* 왼쪽: 지도 (4열) - 제목 변경됨 */}
-        <div className="lg:col-span-4 h-full">
+        {/* 왼쪽: 지도 (4열) */}
+        <div className="lg:col-span-4 h-auto lg:h-[calc(100vh-150px)] min-h-[500px]">
             <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg h-full flex flex-col">
-                <CardHeader className="border-b border-slate-100 dark:border-dashdark-border">
-                  <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                <CardHeader className="border-b border-slate-100 dark:border-dashdark-border py-3">
+                  <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2 text-base">
+                    <Activity className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                     {t('compMapTitle')} 
                   </CardTitle>
                 </CardHeader>
@@ -126,101 +256,70 @@ export default function Comparison() {
             </Card>
         </div>
 
-        {/* 오른쪽: 차트 및 통계 (8열) */}
-        <div className="lg:col-span-8 space-y-6 overflow-y-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {metrics.map(metric => {
-                const Icon = metric.icon;
-                const baseValue = getMetricValue(baseData, metric.key);
-                const optionValue = getMetricValue(optionData, metric.key);
-                const diff = calculateDifference(baseValue, optionValue);
-                
-                const isLowerBetter = ['Delay', 'TCur', 'VHT'].includes(metric.key);
-                const isImprovement = isLowerBetter ? diff < 0 : diff > 0;
+        {/* 오른쪽: 통합된 통계 및 시각화 그리드 (8열) */}
+        <div className="lg:col-span-8 h-auto lg:h-[calc(100vh-150px)] pr-2 overflow-y-auto">
+            
+            {/* [수정] 2열(grid-cols-2) x 3행(grid-rows-3) 구조 적용 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 md:grid-rows-3 lg:grid-rows-3 gap-3 w-full h-full">
+                {metrics.map((metric) => {
+                    const baseVal = parseFloat(getMetricValue(baseData, metric.key).toFixed(metric.decimals));
+                    const optionVal = parseFloat(getMetricValue(optionData, metric.key).toFixed(metric.decimals));
+                    const diff = calculateDifference(baseVal, optionVal);
+                    const isLowerBetter = ['Delay', 'TCur', 'VHT'].includes(metric.key);
+                    const isImprovement = isLowerBetter ? diff < 0 : diff > 0;
+                    const Icon = metric.icon;
 
-                return (
-                    <Card key={metric.key} className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm">
-                    <CardHeader className="pb-2 pt-4">
-                        <CardTitle className="text-xs font-medium text-slate-600 dark:text-dashdark-muted flex items-center gap-2">
-                        <Icon className="w-3.5 h-3.5" />
-                        {metric.label}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pb-4">
-                        <div className="space-y-2">
-                        <div className="flex justify-between items-baseline">
-                            <span className="text-[10px] uppercase text-slate-400">{t('base')}</span>
-                            <span className="text-base font-bold text-slate-700 dark:text-slate-200">
-                            {baseValue.toLocaleString(undefined, { maximumFractionDigits: metric.decimals })} {metric.unit}
-                            </span>
-                        </div>
-                        <div className="flex justify-between items-baseline">
-                            <span className="text-[10px] uppercase text-slate-400">{t('option')}</span>
-                            <span className="text-base font-bold text-violet-600 dark:text-violet-400">
-                            {optionValue.toLocaleString(undefined, { maximumFractionDigits: metric.decimals })} {metric.unit}
-                            </span>
-                        </div>
-                        <div className={`flex items-center gap-1 pt-1 border-t border-slate-100 dark:border-dashdark-border ${isImprovement ? 'text-green-600' : 'text-red-600'}`}>
-                            {isImprovement ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                            <span className="text-xs font-semibold">
-                            {Math.abs(diff)}% {isImprovement ? t('improvement') : t('decrease')}
-                            </span>
-                        </div>
-                        </div>
-                    </CardContent>
-                    </Card>
-                );
+                    return (
+                        <Card key={metric.key} className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col h-full">
+                            {/* Header */}
+                            <CardHeader className="py-2 px-4 border-b border-slate-50 dark:border-slate-800 flex flex-row items-center justify-between space-y-0 shrink-0">
+                                <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                    <div className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-md">
+                                        <Icon className="w-4 h-4 text-violet-600" />
+                                    </div>
+                                    {metric.label}
+                                </CardTitle>
+                                <span className="text-[10px] text-slate-400 font-medium bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                    {metric.unit}
+                                </span>
+                            </CardHeader>
+
+                            <CardContent className="p-0 flex-1 flex flex-col h-full min-h-0">
+                                {/* Visualization Area */}
+                                <div className="flex-1 w-full min-h-0 border-b border-slate-50 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10 flex items-center justify-center p-2">
+                                    {renderVisualization(metric, baseVal, optionVal)}
+                                </div>
+
+                                {/* Stats Area */}
+                                <div className="p-2 shrink-0 flex flex-col justify-center gap-2 bg-white dark:bg-dashdark-card">
+                                    <div className="grid grid-cols-2 w-full">
+                                        <div className="flex flex-col items-center justify-center gap-0 border-r border-slate-100 dark:border-slate-800 w-full">
+                                            <span className="text-[10px] uppercase text-slate-400 font-bold mb-1">BEFORE</span>
+                                            <span className="text-3xl font-bold text-slate-700 dark:text-slate-200 leading-none">
+                                                {baseVal.toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-col items-center justify-center gap-0 w-full">
+                                            <span className="text-[10px] uppercase text-violet-500 font-bold mb-1">AFTER</span>
+                                            <span className="text-3xl font-bold text-violet-600 dark:text-violet-400 leading-none">
+                                                {optionVal.toLocaleString()}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className={`flex items-center justify-center gap-1.5 rounded-lg py-1 mt-1 mx-auto w-3/4 ${isImprovement ? 'bg-green-50 text-green-700 dark:bg-green-900/20' : 'bg-red-50 text-red-700 dark:bg-red-900/20'}`}>
+                                        {isImprovement ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                                        <span className="text-sm font-bold">
+                                            {Math.abs(diff)}% {isImprovement ? t('improvement') : t('decrease')}
+                                        </span>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    );
                 })}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
-                    <CardHeader>
-                        <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2 text-base">
-                        <GitCompare className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                        {t('majorComp')}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={comparisonData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                            <XAxis dataKey="metric" tick={{fontSize: 11}} angle={-15} textAnchor="end" height={60} />
-                            <YAxis tick={{fontSize: 11}} />
-                            <Tooltip 
-                                cursor={{fill: 'rgba(0,0,0,0.05)'}}
-                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                            />
-                            <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                            <Bar dataKey={t('base')} fill="#64748B" name={t('base')} radius={[4, 4, 0, 0]} />
-                            <Bar dataKey={t('option')} fill="#8B5CF6" name={t('option')} radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg">
-                    <CardHeader>
-                        <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2 text-base">
-                        <Activity className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                        {t('radarTitle')}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                        <RadarChart data={radarData} outerRadius={100}>
-                            <PolarGrid stroke="#e2e8f0" />
-                            <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748B', fontSize: 12 }} />
-                            <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#94a3b8" />
-                            <Radar name={t('base')} dataKey={t('base')} stroke="#64748B" strokeWidth={2} fill="#64748B" fillOpacity={0.3} />
-                            <Radar name={t('option')} dataKey={t('option')} stroke="#8B5CF6" strokeWidth={2} fill="#8B5CF6" fillOpacity={0.3} />
-                            <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                            <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                        </RadarChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
-            </div>
         </div>
       </div>
     </div>

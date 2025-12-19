@@ -57,18 +57,20 @@ function ScrollWheelControl({ isLocked, onToggle }) {
 export default function IntersectionMap({ intersections, onSelectIntersection, selectedIntersectionId }) {
   const [isScrollLocked, setIsScrollLocked] = useState(true);
 
-  // ▼▼▼ [확인] 연구 범위 정중앙 좌표 (변경 없음) ▼▼▼
-  const center = [36.6565, 126.676]; 
+  // ▼▼▼ [수정됨] 연구 범위 변경에 따른 중심 좌표 재계산 ▼▼▼
+  // NW: 36.366873, 127.326925
+  // SE: 36.300134, 127.350779
+  // Center: (36.366873 + 36.300134)/2, (127.326925 + 127.350779)/2
+  const center = [36.333504, 127.338852]; 
   
   const bounds = [
-    [36.640, 126.664], 
-    [36.673, 126.688]
+    [36.300134, 127.326925], // South-West (MinLat, MinLng)
+    [36.366873, 127.350779]  // North-East (MaxLat, MaxLng)
   ];
 
   return (
     <MapContainer
       center={center}
-      // ▼▼▼ [확인] 줌 레벨 14 유지 (세로로 길어져서 14가 적당함) ▼▼▼
       zoom={14} 
       style={{ height: '100%', width: '100%' }}
       maxBoundsViscosity={1.0}

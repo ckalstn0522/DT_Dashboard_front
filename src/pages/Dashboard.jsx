@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart2, Database, Filter, Target, LayoutDashboard, Car, Clock } from 'lucide-react';
+import { BarChart2, Database, Filter, Target, LayoutDashboard, Car, Clock, FileText } from 'lucide-react';
 import { useFilter } from "@/context/FilterContext";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -70,7 +70,7 @@ export default function Dashboard() {
     });
   }, [selectedIntersection, allTrafficData, timePeriod, selectedDate]);
 
-  // Option 시나리오 가상 데이터 (1~3배 랜덤 증가)
+  // Option 시나리오 가상 데이터
   const optionTrafficData = useMemo(() => {
     return filteredTrafficData.map(data => {
       const multiplier = 1.0 + Math.random() * 2.0; 
@@ -140,6 +140,7 @@ export default function Dashboard() {
       </div>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-0">
+        {/* 왼쪽 지도 영역 */}
         <div className="lg:col-span-4 flex flex-col h-full min-h-0">
           <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col h-full overflow-hidden">
             <CardHeader className="bg-slate-50 dark:bg-dashdark-sidebar border-b border-slate-100 dark:border-dashdark-border py-3 px-4 shrink-0">
@@ -161,7 +162,9 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* 오른쪽 데이터 영역 */}
         <div className="lg:col-span-8 flex flex-col gap-4 h-full min-h-0 overflow-y-auto">
+          {/* 상단 KPI */}
           <div className="grid grid-cols-4 gap-3 shrink-0">
             {kpiItems.map((item, idx) => (
                <div key={idx} className="p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col items-center justify-center gap-1">
@@ -173,47 +176,56 @@ export default function Dashboard() {
             ))}
           </div>
 
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[400px]">
+          {/* 중간: 교차로 시각화 (높이를 65%로 유지) */}
+          <div className="h-[65%] grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[350px] shrink-0">
             <div className="flex flex-col gap-4 h-full">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between shrink-0">
                     <h3 className="text-sm font-bold text-slate-700 dark:text-white border-l-4 border-slate-500 pl-2">{t('base')}</h3>
                 </div>
-                <div className="flex-1 h-full">
+                <div className="flex-1 h-full min-h-0">
                     <TrafficVolumeDisplay trafficData={filteredTrafficData} />
                 </div>
             </div>
 
             <div className="flex flex-col gap-4 h-full">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between shrink-0">
                     <h3 className="text-sm font-bold text-violet-600 dark:text-violet-400 border-l-4 border-violet-500 pl-2">{t('option')}</h3>
                 </div>
-                <div className="flex-1 h-full">
+                <div className="flex-1 h-full min-h-0">
                     <TrafficVolumeDisplay trafficData={optionTrafficData} />
                 </div>
             </div>
           </div>
 
-          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm shrink-0">
-             <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex items-center justify-around p-3 bg-slate-50 dark:bg-dashdark-sidebar rounded-lg border border-slate-100 dark:border-dashdark-border">
+          {/* 하단: 데이터 요약 카드 */}
+          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm flex-1 min-h-[200px] flex flex-col">
+             <CardHeader className="py-3 px-4 border-b border-slate-100 dark:border-dashdark-border shrink-0">
+                <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-slate-500" />
+                    {t('intersectionDataTitle')} 
+                </CardTitle>
+             </CardHeader>
+             <CardContent className="p-4 flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                
+                {/* Base Stats */}
+                <div className="flex items-center justify-around p-6 bg-slate-50 dark:bg-dashdark-sidebar rounded-lg border border-slate-100 dark:border-dashdark-border h-full max-h-[160px]">
                     <div className="text-center">
-                        <div className="text-xs text-slate-500 mb-1">{t('volume')}</div>
-                        <div className="font-bold text-slate-800 dark:text-white flex items-center gap-1 justify-center">
-                            <Car className="w-3 h-3"/> {baseStats.volume.toLocaleString()}
+                        <div className="text-sm text-slate-500 mb-2">{t('volume')}</div>
+                        <div className="font-bold text-2xl text-slate-800 dark:text-white flex items-center gap-2 justify-center">
+                            <Car className="w-5 h-5 text-slate-400"/> {baseStats.volume.toLocaleString()}
                         </div>
                     </div>
-                    <div className="w-px h-8 bg-slate-200 dark:bg-dashdark-border"></div>
+                    <div className="w-px h-12 bg-slate-200 dark:bg-dashdark-border"></div>
                     <div className="text-center">
-                        <div className="text-xs text-slate-500 mb-1">{t('delay')}</div>
-                        <div className="font-bold text-slate-800 dark:text-white flex items-center gap-1 justify-center">
-                            <Clock className="w-3 h-3"/> {baseStats.delay}s
+                        <div className="text-sm text-slate-500 mb-2">{t('delay')}</div>
+                        <div className="font-bold text-2xl text-slate-800 dark:text-white flex items-center gap-2 justify-center">
+                            <Clock className="w-5 h-5 text-slate-400"/> {baseStats.delay}s
                         </div>
                     </div>
-                    <div className="w-px h-8 bg-slate-200 dark:bg-dashdark-border"></div>
+                    <div className="w-px h-12 bg-slate-200 dark:bg-dashdark-border"></div>
                     <div className="text-center">
-                        <div className="text-xs text-slate-500 mb-1">{t('los')}</div>
-                        {/* [수정됨] Grade 텍스트 제거 */}
-                        <div className={`font-bold text-xl px-2 py-0.5 rounded ${
+                        <div className="text-sm text-slate-500 mb-2">{t('los')}</div>
+                        <div className={`font-bold text-3xl px-4 py-1 rounded-md ${
                             baseStats.los === 'A' || baseStats.los === 'B' ? 'bg-green-100 text-green-700' :
                             baseStats.los === 'C' || baseStats.los === 'D' ? 'bg-yellow-100 text-yellow-700' :
                             'bg-red-100 text-red-700'
@@ -223,24 +235,25 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                <div className="flex items-center justify-around p-3 bg-violet-50 dark:bg-violet-900/10 rounded-lg border border-violet-100 dark:border-violet-800">
+                {/* Option Stats */}
+                <div className="flex items-center justify-around p-6 bg-violet-50 dark:bg-violet-900/10 rounded-lg border border-violet-100 dark:border-violet-800 h-full max-h-[160px]">
                     <div className="text-center">
-                        <div className="text-xs text-violet-500 mb-1">{t('volume')}</div>
-                        <div className="font-bold text-violet-800 dark:text-violet-300 flex items-center gap-1 justify-center">
-                            <Car className="w-3 h-3"/> {optionStats.volume.toLocaleString()}
+                        <div className="text-sm text-violet-500 mb-2">{t('volume')}</div>
+                        <div className="font-bold text-2xl text-violet-800 dark:text-violet-300 flex items-center gap-2 justify-center">
+                            <Car className="w-5 h-5 text-violet-400"/> {optionStats.volume.toLocaleString()}
                         </div>
                     </div>
-                    <div className="w-px h-8 bg-violet-200 dark:bg-violet-800"></div>
+                    <div className="w-px h-12 bg-violet-200 dark:bg-violet-800"></div>
                     <div className="text-center">
-                        <div className="text-xs text-violet-500 mb-1">{t('delay')}</div>
-                        <div className="font-bold text-violet-800 dark:text-violet-300 flex items-center gap-1 justify-center">
-                            <Clock className="w-3 h-3"/> {optionStats.delay}s
+                        <div className="text-sm text-violet-500 mb-2">{t('delay')}</div>
+                        <div className="font-bold text-2xl text-violet-800 dark:text-violet-300 flex items-center gap-2 justify-center">
+                            <Clock className="w-5 h-5 text-violet-400"/> {optionStats.delay}s
                         </div>
                     </div>
-                    <div className="w-px h-8 bg-violet-200 dark:bg-violet-800"></div>
+                    <div className="w-px h-12 bg-violet-200 dark:bg-violet-800"></div>
                     <div className="text-center">
-                        <div className="text-xs text-violet-500 mb-1">{t('los')}</div>
-                        <div className={`font-bold text-xl px-2 py-0.5 rounded ${
+                        <div className="text-sm text-violet-500 mb-2">{t('los')}</div>
+                        <div className={`font-bold text-3xl px-4 py-1 rounded-md ${
                             optionStats.los === 'A' || optionStats.los === 'B' ? 'bg-green-100 text-green-700' :
                             optionStats.los === 'C' || optionStats.los === 'D' ? 'bg-yellow-100 text-yellow-700' :
                             'bg-red-100 text-red-700'

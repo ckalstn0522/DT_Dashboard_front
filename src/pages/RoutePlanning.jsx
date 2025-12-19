@@ -74,7 +74,9 @@ export default function RoutePlanning() {
   const optionData = comparisons.find(c => c.scenario_name === 'Option') || {};
   const baseSpeed = baseData.avg_speed || 50; 
   const optionSpeed = optionData.avg_speed || 60;
-  const center = [(36.640140 + 36.673372) / 2, (126.663909 + 126.687575) / 2];
+  
+  // [수정됨] 변경된 연구 영역의 중심 좌표 (NW: 36.366873, 127.326925 / SE: 36.300134, 127.350779)
+  const center = [(36.300134 + 36.366873) / 2, (127.326925 + 127.350779) / 2];
 
   const fetchRoute = async (from, to) => {
     setIsLoadingRoute(true);
