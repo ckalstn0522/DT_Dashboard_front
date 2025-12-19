@@ -6,13 +6,12 @@ import L from 'leaflet';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Route, Clock, Trash2, MapPin, Loader2, Lock, Unlock } from 'lucide-react';
+import { Route, Clock, Trash2, MapPin, Loader2, Lock, Unlock, Timer, Car } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import { useLanguage } from "@/context/LanguageContext";
 
 const API_URL = 'https://dt-dashboard-back.onrender.com/api';
 
-// 아이콘 설정
 const intersectionIcon = new L.Icon({
   iconUrl: 'data:image/svg+xml;base64,' + btoa(`
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgb(139, 92, 246)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -59,21 +58,18 @@ export default function RoutePlanning() {
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
   const [isScrollLocked, setIsScrollLocked] = useState(true);
 
-  // 1. 교차로 데이터 조회
   const { data: intersections, isLoading } = useQuery({
     queryKey: ['intersections'],
     queryFn: () => axios.get(`${API_URL}/intersections`).then(res => res.data),
     initialData: [],
   });
 
-  // 2. 시뮬레이션 비교 데이터 조회 (평균 속도 가져오기 위함)
   const { data: comparisons } = useQuery({
     queryKey: ['simulationcomparison'],
     queryFn: () => axios.get(`${API_URL}/simulationcomparison`).then(res => res.data),
     initialData: [],
   });
 
-  // DB에서 가져온 속도값 적용 (데이터가 없으면 기본값 50/60 사용)
   const baseData = comparisons.find(c => c.scenario_name === 'Base') || {};
   const optionData = comparisons.find(c => c.scenario_name === 'Option') || {};
   
@@ -82,7 +78,6 @@ export default function RoutePlanning() {
 
   const center = [(36.640140 + 36.673372) / 2, (126.663909 + 126.687575) / 2];
 
-  // 경로 탐색 API 호출
   const fetchRoute = async (from, to) => {
     setIsLoadingRoute(true);
     const fromCoords = { latitude: parseFloat(from.latitude), longitude: parseFloat(from.longitude) };
@@ -109,11 +104,16 @@ export default function RoutePlanning() {
         const positions = routeGeometry.map(coord => [coord[1], coord[0]]);
         const distanceKm = bestRoute.distance / 1000;
         
-        // *주의: 여기서 시간을 계산하지 않고 거리만 반환합니다.
-        // 속도 데이터가 로딩되기 전일 수도 있고, 화면 렌더링 시점의 최신 baseSpeed/optionSpeed를 쓰기 위함입니다.
+        // Base와 Option 각각의 교통량 생성 (랜덤 값)
+        const trafficVolumeBase = Math.floor(Math.random() * (3000 - 100 + 1)) + 100;
+        // Option은 Base와 비슷하거나 약간 다른 값으로 설정 (예: 90% ~ 110%)
+        const trafficVolumeOption = Math.floor(trafficVolumeBase * (0.9 + Math.random() * 0.2));
+
         return {
           positions,
           distance: distanceKm.toFixed(2),
+          trafficVolumeBase, 
+          trafficVolumeOption,
         };
       }
     } catch (error) {
@@ -145,7 +145,6 @@ export default function RoutePlanning() {
     setRoutes([]);
   };
 
-  // 렌더링 시점에 계산된 시간 (초 단위)
   const calculateDuration = (distKm, speedKmh) => {
     if (!speedKmh || speedKmh === 0) return 0;
     return Math.round((distKm / speedKmh) * 3600);
@@ -235,6 +234,7 @@ export default function RoutePlanning() {
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
                 
+                {/* 거리 정보 카드 (단독) */}
                 <div className="p-4 bg-slate-50 dark:bg-dashdark-sidebar rounded-xl border border-slate-200 dark:border-dashdark-border text-center">
                   <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t('totalDist')}</div>
                   <div className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -243,13 +243,17 @@ export default function RoutePlanning() {
                 </div>
 
                 <div className="space-y-3">
-                    {/* Base Scenario */}
+                    {/* Base Scenario - 교통량 추가됨 */}
                     <div className="flex justify-between items-center p-3 rounded-lg bg-slate-100 dark:bg-dashdark-bg border border-slate-200 dark:border-dashdark-border">
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-slate-500"></div>
                             <div>
                                 <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{t('baseScenario')}</div>
-                                <div className="text-xs text-slate-500">{t('speed')}: {baseSpeed.toFixed(1)} km/h</div>
+                                <div className="text-xs text-slate-500 flex items-center gap-2">
+                                    <span>{t('speed')}: {baseSpeed.toFixed(1)} km/h</span>
+                                    <span className="w-px h-2 bg-slate-300"></span>
+                                    <span className="flex items-center gap-1"><Car className="w-3 h-3"/> {routes[0].trafficVolumeBase.toLocaleString()}</span>
+                                </div>
                             </div>
                         </div>
                         <div className="text-lg font-bold text-slate-700 dark:text-slate-200">
@@ -260,13 +264,17 @@ export default function RoutePlanning() {
                         </div>
                     </div>
 
-                    {/* Option Scenario */}
+                    {/* Option Scenario - 교통량 추가됨 */}
                     <div className="flex justify-between items-center p-3 rounded-lg bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800">
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-violet-600"></div>
                             <div>
                                 <div className="text-sm font-semibold text-violet-700 dark:text-violet-300">{t('optionScenario')}</div>
-                                <div className="text-xs text-violet-500 dark:text-violet-400">{t('speed')}: {optionSpeed.toFixed(1)} km/h</div>
+                                <div className="text-xs text-violet-500 dark:text-violet-400 flex items-center gap-2">
+                                    <span>{t('speed')}: {optionSpeed.toFixed(1)} km/h</span>
+                                    <span className="w-px h-2 bg-violet-300 dark:bg-violet-700"></span>
+                                    <span className="flex items-center gap-1"><Car className="w-3 h-3"/> {routes[0].trafficVolumeOption.toLocaleString()}</span>
+                                </div>
                             </div>
                         </div>
                         <div className="text-lg font-bold text-violet-700 dark:text-violet-300">
@@ -277,6 +285,30 @@ export default function RoutePlanning() {
                         </div>
                     </div>
                 </div>
+
+                {/* 시간 단축 효과 표시 */}
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center justify-between">
+                   <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                      <Timer className="w-4 h-4" />
+                      <span className="text-sm font-semibold">{t('timeGap')} (Base → Option)</span>
+                   </div>
+                   <div className="font-bold text-green-700 dark:text-green-300">
+                     {(() => {
+                        const durationBase = calculateDuration(routes[0].distance, baseSpeed);
+                        const durationOption = calculateDuration(routes[0].distance, optionSpeed);
+                        const diff = durationBase - durationOption;
+                        
+                        if (diff > 0) {
+                            return <>-{Math.floor(diff / 60)}m {diff % 60}s</>;
+                        } else if (diff < 0) {
+                            return <>+{Math.floor(Math.abs(diff) / 60)}m {Math.abs(diff) % 60}s</>;
+                        } else {
+                            return "0s";
+                        }
+                     })()}
+                   </div>
+                </div>
+
               </CardContent>
             </Card>
           )}

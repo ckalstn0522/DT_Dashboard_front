@@ -20,7 +20,7 @@ export const translations = {
     improvement: "개선",
     decrease: "감소",
     
-    // Metrics (Updated)
+    // Metrics
     vht: "VHT (총 통행시간)",
     vkt: "VKT (총 통행거리)",
     vcur: "VCur (평균 속도)",
@@ -42,8 +42,9 @@ export const translations = {
     baseScenario: "Base 시나리오",
     optionScenario: "Option 시나리오",
     speed: "속도",
-    compareAnalysis: "통행 시간 비교 분석",
-    timeGap: "시간 단축",
+    compareAnalysis: "통행 시간 비교 분석", // 추가
+    timeGap: "시간 단축", // 추가
+    vehicleCount: "교통량", // 추가
   },
   en: {
     // Sidebar
@@ -66,7 +67,7 @@ export const translations = {
     improvement: "Improvement",
     decrease: "Decrease",
 
-    // Metrics (Updated)
+    // Metrics
     vht: "VHT (Total Travel Time)",
     vkt: "VKT (Total Distance)",
     vcur: "VCur (Avg Speed)",
@@ -88,7 +89,8 @@ export const translations = {
     baseScenario: "Base Scenario",
     optionScenario: "Option Scenario",
     speed: "Speed",
-    compareAnalysis: "Travel Time Analysis",
-    timeGap: "Time Saved",
+    compareAnalysis: "Travel Time Analysis", // 추가
+    timeGap: "Time Saved", // 추가
+    vehicleCount: "Traffic Volume", // 추가
   }
 };
