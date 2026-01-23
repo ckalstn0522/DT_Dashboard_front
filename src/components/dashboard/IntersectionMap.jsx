@@ -61,11 +61,11 @@ export default function IntersectionMap({ intersections, onSelectIntersection, s
   // NW: 36.366873, 127.326925
   // SE: 36.300134, 127.350779
   // Center: (36.366873 + 36.300134)/2, (127.326925 + 127.350779)/2
-  const center = [36.333504, 127.338852]; 
+  const center = [36.65566, 126.67569]; 
   
   const bounds = [
-    [36.300134, 127.326925], // South-West (MinLat, MinLng)
-    [36.366873, 127.350779]  // North-East (MaxLat, MaxLng)
+    [36.67282, 126.66241], // South-West (MinLat, MinLng)
+    [36.63850, 126.68897]  // North-East (MaxLat, MaxLng)
   ];
 
   return (
