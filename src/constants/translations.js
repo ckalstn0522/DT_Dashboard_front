@@ -19,12 +19,12 @@ export const translations = {
     radarTitle: "종합 성능 분석",
     improvement: "개선",
     decrease: "감소",
-    compMapTitle: "연구영역", // [변경]
+    compMapTitle: "연구영역",
 
-    // Metrics [순서 및 명칭 변경 반영]
+    // Metrics
     vht: "VHT (총 통행시간)",
     vkt: "VKT (총 통행거리)",
-    volume: "도착 차량 수", // [변경]
+    volume: "도착 차량 수",
     tcur: "평균 차량 통행시간",
     vcur: "평균 차량 속도",
     delay: "평균 차량 지체시간",
@@ -40,12 +40,12 @@ export const translations = {
     routeInfo: "경로 정보 및 시나리오 비교",
     totalDist: "총 거리",
     avgTime: "평균 소요",
-    baseScenario: "Before 시나리오", // [변경]
-    optionScenario: "After 시나리오", // [변경]
+    baseScenario: "Before 시나리오",
+    optionScenario: "After 시나리오",
     speed: "속도",
     compareAnalysis: "통행 시간 비교 분석",
     timeGap: "시간 차이",
-    vehicleCount: "도착 차량 수", // [변경]
+    vehicleCount: "도착 차량 수",
     diff: "차이",
 
     // Dashboard (Main)
@@ -55,11 +55,11 @@ export const translations = {
     kpiDataTemp: "데이터(임시)",
     kpiFilterTemp: "필터링(임시)",
     dashMapTitle: "연구 범위 맵",
-    intersectionDataTitle: "교차로별 교통 데이터", // [추가됨]
+    intersectionDataTitle: "교차로별 교통 데이터",
     
     // Common Terms
-    base: "Before", // [변경]
-    option: "After", // [변경]
+    base: "Before",
+    option: "After",
     los: "서비스 수준(LOS)",
     grade: "등급",
 
@@ -67,7 +67,16 @@ export const translations = {
     trafficVolumeDirectional: "방향별 교통 데이터 (진입 기준)",
     approach: "진입",
     queue: "대기행렬",
-    delaySimple: "지체시간", 
+    delaySimple: "지체시간",
+
+    //Selectors (추가됨)
+    selectDate: "날짜 선택",
+    allDates: "전체 날짜",
+    selectIntersectionFirst: "교차로 선택 필요",
+    selectTime: "시간대 선택",
+    allTime: "전체 시간대",
+    daysCount: "일",
+    periodsCount: "개",
   },
   en: {
     // Sidebar
@@ -89,12 +98,12 @@ export const translations = {
     radarTitle: "Comprehensive Analysis",
     improvement: "Improvement",
     decrease: "Decrease",
-    compMapTitle: "Study area", // [Change]
+    compMapTitle: "Study area",
 
     // Metrics
     vht: "VHT (Total Travel Time)",
     vkt: "VKT (Total Distance)",
-    volume: "Number of Veh Arrived", // [Change]
+    volume: "Number of Veh Arrived",
     tcur: "Avg Vehicle Travel Time",
     vcur: "Avg Vehicle Speed",
     delay: "Avg Vehicle Delay",
@@ -110,8 +119,8 @@ export const translations = {
     routeInfo: "Route Info & Comparison",
     totalDist: "Total Distance",
     avgTime: "Avg Duration",
-    baseScenario: "Before Scenario", // [Change]
-    optionScenario: "After Scenario", // [Change]
+    baseScenario: "Before Scenario",
+    optionScenario: "After Scenario",
     speed: "Speed",
     compareAnalysis: "Travel Time Analysis",
     timeGap: "Time Difference",
@@ -125,11 +134,11 @@ export const translations = {
     kpiDataTemp: "Data (Temp)",
     kpiFilterTemp: "Filtering (Temp)",
     dashMapTitle: "Research Scope Map",
-    intersectionDataTitle: "Intersection Traffic Data", // [추가됨]
+    intersectionDataTitle: "Intersection Traffic Data",
 
     // Common Terms
-    base: "Before", // [Change]
-    option: "After", // [Change]
+    base: "Before",
+    option: "After",
     los: "Level of Service (LOS)",
     grade: "Grade",
 
@@ -138,5 +147,14 @@ export const translations = {
     approach: "Approach",
     queue: "Queue",
     delaySimple: "Delay",
+
+    //Selectors (추가됨)
+    selectDate: "Select Date",
+    allDates: "All Dates",
+    selectIntersectionFirst: "Select Intersection First",
+    selectTime: "Select Time",
+    allTime: "All Time Periods",
+    daysCount: "days",
+    periodsCount: "periods",
   }
 };

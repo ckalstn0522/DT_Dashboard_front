@@ -53,14 +53,10 @@ export default function Comparison() {
   };
 
   const calculateDifference = (base, option) => {
-    if (!base) return 0;
+    if (!base || base === 0) return 0;
     return ((option - base) / base * 100).toFixed(1);
   };
 
-  // 요청하신 배치 순서대로 배열 정의
-  // 1행: VHT, VKT
-  // 2행: Vol, TCur
-  // 3행: VCur, Delay
   const metrics = [
     { key: 'VHT', label: t('vht'), unit: 'h', icon: Clock, decimals: 1 },
     { key: 'VKT', label: t('vkt'), unit: 'km', icon: Activity, decimals: 0 },
@@ -72,7 +68,7 @@ export default function Comparison() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="p-6 space-y-6">
         <Skeleton className="h-10 w-1/3" />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
              <div className="lg:col-span-4"><Skeleton className="h-[600px] w-full" /></div>
@@ -86,140 +82,105 @@ export default function Comparison() {
     );
   }
 
-  // --- 시각화 컴포넌트 ---
+  // --- 시각화 컴포넌트 (높이 가변형) ---
 
-  const RenderSimpleBar = ({ base, option, unit, color }) => {
-    const data = [
-      { name: 'BEFORE', value: base },
-      { name: 'AFTER', value: option }
-    ];
+  const RenderSimpleBar = ({ base, option, color }) => {
+    const data = [{ name: 'BEFORE', value: base }, { name: 'AFTER', value: option }];
     return (
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 20, right: 20, left: 20, bottom: 5 }}>
+        <BarChart data={data} margin={{ top: 30, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-          <XAxis dataKey="name" tick={{fontSize: 12, fontWeight: 'bold'}} axisLine={false} tickLine={false} />
-          <YAxis tick={{fontSize: 11}} axisLine={false} tickLine={false} width={30} />
-          <Tooltip cursor={{fill: 'transparent'}} contentStyle={{borderRadius: '8px', border:'none', boxShadow:'0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
-          <Bar dataKey="value" fill={color} radius={[6, 6, 0, 0]} barSize={50}>
-            <LabelList dataKey="value" position="top" fill="#64748b" fontSize={12} fontWeight="bold" />
+          <XAxis dataKey="name" tick={{fontSize: 10, fontWeight: 'bold'}} axisLine={false} tickLine={false} />
+          <YAxis hide />
+          <Tooltip cursor={{fill: 'transparent'}} contentStyle={{borderRadius: '8px', border:'none'}} />
+          <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} barSize={45}>
+            <LabelList dataKey="value" position="top" fill="#64748b" fontSize={11} fontWeight="bold" />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
     );
   };
 
-  const RenderVolumeChart = () => {
-    return (
-        <div className="grid grid-cols-2 h-full items-center relative w-full">
-             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2/3 w-px bg-slate-200 dark:bg-slate-700"></div>
-             <div className="flex flex-col items-center justify-center w-full h-full">
-                <div className="p-5 bg-slate-50 dark:bg-slate-800 rounded-full shadow-sm">
-                    <Car className="w-12 h-12 text-slate-400" />
-                </div>
-             </div>
-             <div className="flex flex-col items-center justify-center w-full h-full">
-                <div className="p-5 bg-violet-50 dark:bg-violet-900/20 rounded-full shadow-sm">
-                    <Car className="w-14 h-14 text-violet-500" />
-                </div>
-             </div>
+  const RenderVolumeChart = () => (
+    <div className="flex items-center justify-around w-full h-full">
+      <div className="flex flex-col items-center">
+        <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-full mb-2">
+          <Car className="w-10 h-10 text-slate-400" />
         </div>
-    );
-  };
+        <span className="text-[10px] font-bold text-slate-400">BEFORE</span>
+      </div>
+      <div className="h-16 w-px bg-slate-200 dark:bg-slate-700" />
+      <div className="flex flex-col items-center">
+        <div className="p-4 bg-violet-100 dark:bg-violet-900/30 rounded-full mb-2">
+          <Car className="w-12 h-12 text-violet-500" />
+        </div>
+        <span className="text-[10px] font-bold text-violet-500">AFTER</span>
+      </div>
+    </div>
+  );
 
   const RenderGaugeChart = ({ base, option }) => {
-    const MAX_SPEED = 200; 
-    const baseVal = Math.min(base, MAX_SPEED);
-    const optionVal = Math.min(option, MAX_SPEED);
+    const MAX_VAL = 120;
     const data = [
-      { name: 'BEFORE', value: baseVal, color: '#94a3b8' },
-      { name: 'AFTER', value: optionVal, color: '#8b5cf6' }
+      { name: 'BEFORE', value: Math.min(base, MAX_VAL), color: '#94a3b8' },
+      { name: 'AFTER', value: Math.min(option, MAX_VAL), color: '#8b5cf6' }
     ];
-
     return (
-      <div className="grid grid-cols-2 h-full items-end pb-2 w-full">
+      <div className="flex justify-around items-center w-full h-full">
         {data.map((item) => (
-          <div key={item.name} className="flex flex-col items-center justify-end w-full h-full relative">
-            <div className="w-[120px] h-[120px] lg:w-[140px] lg:h-[140px]">
-                <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                    <Pie
-                    data={[{ val: item.value }, { val: MAX_SPEED - item.value }]}
-                    cx="50%" 
-                    cy="85%"  
-                    startAngle={180} 
-                    endAngle={0}
-                    innerRadius="60%" 
-                    outerRadius="90%" 
-                    dataKey="val" 
-                    stroke="none"
-                    >
-                    <Cell fill={item.color} />
-                    <Cell fill="#e2e8f0" />
-                    </Pie>
-                </PieChart>
-                </ResponsiveContainer>
-            </div>
+          <div key={item.name} className="relative w-[40%] h-[80%] flex flex-col items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[{ v: item.value }, { v: MAX_VAL - item.value }]}
+                  cx="50%" cy="100%" startAngle={180} endAngle={0}
+                  innerRadius="65%" outerRadius="100%" dataKey="v" stroke="none"
+                >
+                  <Cell fill={item.color} />
+                  <Cell fill="#f1f5f9" />
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <span className="text-[10px] font-bold text-slate-400 absolute bottom-0">{item.name}</span>
           </div>
         ))}
       </div>
     );
   };
 
-  const RenderTimeDisplay = () => {
-     return (
-        <div className="grid grid-cols-2 h-full items-center relative w-full">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2/3 w-px bg-slate-200 dark:bg-slate-700"></div>
-            <div className="flex flex-col items-center justify-center w-full h-full">
-                <div className="relative flex items-center justify-center w-20 h-20 rounded-full border-4 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
-                    <Clock className="w-8 h-8 text-slate-400" />
-                </div>
-            </div>
-            <div className="flex flex-col items-center justify-center w-full h-full">
-                <div className="relative flex items-center justify-center w-24 h-24 rounded-full border-4 border-violet-500 shadow-lg bg-violet-50 dark:bg-violet-900/20">
-                    <Timer className="w-10 h-10 text-violet-600 dark:text-violet-400" />
-                </div>
-            </div>
-        </div>
-     );
-  };
+  const RenderTimeDisplay = () => (
+    <div className="flex items-center justify-around w-full h-full">
+      <div className="relative flex items-center justify-center w-20 h-20 rounded-full border-2 border-slate-200 bg-slate-50">
+        <Clock className="w-8 h-8 text-slate-400" />
+      </div>
+      <div className="h-12 w-px bg-slate-200" />
+      <div className="relative flex items-center justify-center w-24 h-24 rounded-full border-2 border-violet-500 bg-violet-50 shadow-sm">
+        <Timer className="w-10 h-10 text-violet-600" />
+      </div>
+    </div>
+  );
 
   const RenderLollipopChart = ({ base, option }) => {
-    const data = [
-        { name: 'BEFORE', value: base, fill: '#ef4444' }, 
-        { name: 'AFTER', value: option, fill: base > option ? '#22c55e' : '#ef4444' } 
-    ];
-
+    const data = [{ n: 'B', v: base, f: '#94a3b8' }, { n: 'A', v: option, f: '#8b5cf6' }];
     return (
-        <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-                layout="vertical"
-                data={data}
-                margin={{ top: 20, right: 20, left: 20, bottom: 5 }}
-                barSize={12} 
-            >
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={true} stroke="#e2e8f0" />
-                <XAxis type="number" tick={{fontSize: 11}} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" width={50} tick={{fontSize: 11, fontWeight: 'bold'}} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{fill: 'transparent'}} contentStyle={{borderRadius: '8px'}} />
-                <Bar dataKey="value" fill="#e2e8f0" background={{ fill: 'transparent' }} radius={[0, 10, 10, 0]}>
-                   <LabelList dataKey="value" position="right" style={{ fontSize: 11, fontWeight: 'bold', fill: '#64748b' }} />
-                </Bar>
-                 <Bar dataKey="value" radius={[10, 10, 10, 10]} barSize={10} >
-                     {
-                        data.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))
-                     }
-                 </Bar>
-            </BarChart>
-        </ResponsiveContainer>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart layout="vertical" data={data} margin={{ top: 20, right: 40, left: 10, bottom: 20 }}>
+          <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+          <XAxis type="number" hide />
+          <YAxis dataKey="n" type="category" width={20} tick={{fontSize: 10, fontWeight: 'bold'}} axisLine={false} tickLine={false} />
+          <Bar dataKey="v" radius={[0, 10, 10, 0]} barSize={12}>
+             {data.map((e, i) => <Cell key={i} fill={e.f} />)}
+             <LabelList dataKey="v" position="right" style={{ fontSize: 10, fontWeight: 'bold', fill: '#64748b' }} />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     );
   };
 
   const renderVisualization = (metric, baseVal, optionVal) => {
     switch(metric.key) {
-        case 'VHT': return <RenderSimpleBar base={baseVal} option={optionVal} unit="h" color="#8b5cf6" />;
-        case 'VKT': return <RenderSimpleBar base={baseVal} option={optionVal} unit="km" color="#3b82f6" />;
+        case 'VHT': return <RenderSimpleBar base={baseVal} option={optionVal} color="#8b5cf6" />;
+        case 'VKT': return <RenderSimpleBar base={baseVal} option={optionVal} color="#3b82f6" />;
         case 'Vol': return <RenderVolumeChart />;
         case 'TCur': return <RenderTimeDisplay />;
         case 'VCur': return <RenderGaugeChart base={baseVal} option={optionVal} />;
@@ -229,87 +190,88 @@ export default function Comparison() {
   };
 
   return (
-    <div className="max-w-[1800px] mx-auto space-y-4 h-full pb-4">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+    <div className="w-full max-w-[1920px] mx-auto p-4 lg:p-6 flex flex-col h-[calc(100vh-40px)] overflow-hidden">
+      {/* Header Area */}
+      <div className="mb-4 shrink-0">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
           {t('compTitle')}
         </h1>
-        <p className="text-sm text-slate-600 dark:text-dashdark-muted mt-0.5">{t('compDesc')}</p>
+        <p className="text-sm text-slate-500 dark:text-dashdark-muted">{t('compDesc')}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[500px]">
+      {/* Main Content Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-0">
         
-        {/* 왼쪽: 지도 (4열) */}
-        <div className="lg:col-span-4 h-auto lg:h-[calc(100vh-150px)] min-h-[500px]">
-            <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-lg h-full flex flex-col">
-                <CardHeader className="border-b border-slate-100 dark:border-dashdark-border py-3">
-                  <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2 text-base">
-                    <Activity className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+        {/* Left: Map Section (4 Columns) */}
+        <div className="lg:col-span-4 xl:col-span-3 h-full min-h-[400px]">
+            <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-md h-full flex flex-col overflow-hidden">
+                <CardHeader className="border-b border-slate-50 dark:border-dashdark-border py-3 px-4 shrink-0">
+                  <CardTitle className="text-slate-800 dark:text-white flex items-center gap-2 text-sm font-bold">
+                    <Activity className="w-4 h-4 text-violet-600" />
                     {t('compMapTitle')} 
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-0 flex-1 relative overflow-hidden">
-                   <div className="absolute inset-0">
-                    <IntersectionMap intersections={intersections} />
-                   </div>
+                <CardContent className="p-0 flex-1 relative bg-slate-50">
+                    <div className="absolute inset-0">
+                        <IntersectionMap intersections={intersections} />
+                    </div>
                 </CardContent>
             </Card>
         </div>
 
-        {/* 오른쪽: 통합된 통계 및 시각화 그리드 (8열) */}
-        <div className="lg:col-span-8 h-auto lg:h-[calc(100vh-150px)] pr-2 overflow-y-auto">
-            
-            {/* [수정] 2열(grid-cols-2) x 3행(grid-rows-3) 구조 적용 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 md:grid-rows-3 lg:grid-rows-3 gap-3 w-full h-full">
+        {/* Right: Metrics Grid (8 Columns) */}
+        <div className="lg:col-span-8 xl:col-span-9 h-full flex flex-col">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 md:grid-rows-3 xl:grid-rows-2 gap-4 h-full">
                 {metrics.map((metric) => {
-                    const baseVal = parseFloat(getMetricValue(baseData, metric.key).toFixed(metric.decimals));
-                    const optionVal = parseFloat(getMetricValue(optionData, metric.key).toFixed(metric.decimals));
-                    const diff = calculateDifference(baseVal, optionVal);
+                    const rawBase = getMetricValue(baseData, metric.key);
+                    const rawOption = getMetricValue(optionData, metric.key);
+                    const baseVal = parseFloat(rawBase.toFixed(metric.decimals));
+                    const optionVal = parseFloat(rawOption.toFixed(metric.decimals));
+                    const diff = calculateDifference(rawBase, rawOption);
+                    
                     const isLowerBetter = ['Delay', 'TCur', 'VHT'].includes(metric.key);
                     const isImprovement = isLowerBetter ? diff < 0 : diff > 0;
                     const Icon = metric.icon;
 
                     return (
-                        <Card key={metric.key} className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col h-full">
-                            {/* Header */}
-                            <CardHeader className="py-2 px-4 border-b border-slate-50 dark:border-slate-800 flex flex-row items-center justify-between space-y-0 shrink-0">
-                                <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                                    <div className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-md">
-                                        <Icon className="w-4 h-4 text-violet-600" />
-                                    </div>
+                        <Card key={metric.key} className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col h-full overflow-hidden">
+                            <CardHeader className="py-2.5 px-4 border-b border-slate-50 dark:border-slate-800 flex flex-row items-center justify-between space-y-0 shrink-0">
+                                <CardTitle className="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                                    <Icon className="w-3.5 h-3.5 text-violet-600" />
                                     {metric.label}
                                 </CardTitle>
-                                <span className="text-[10px] text-slate-400 font-medium bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                <span className="text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded uppercase">
                                     {metric.unit}
                                 </span>
                             </CardHeader>
 
-                            <CardContent className="p-0 flex-1 flex flex-col h-full min-h-0">
-                                {/* Visualization Area */}
-                                <div className="flex-1 w-full min-h-0 border-b border-slate-50 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10 flex items-center justify-center p-2">
+                            <CardContent className="p-0 flex-1 flex flex-col min-h-0">
+                                {/* Visualization: flex-1 allows it to grow vertically */}
+                                <div className="flex-1 w-full bg-slate-50/50 dark:bg-slate-900/10 flex items-center justify-center p-2 border-b border-slate-50 min-h-0">
                                     {renderVisualization(metric, baseVal, optionVal)}
                                 </div>
 
-                                {/* Stats Area */}
-                                <div className="p-2 shrink-0 flex flex-col justify-center gap-2 bg-white dark:bg-dashdark-card">
-                                    <div className="grid grid-cols-2 w-full">
-                                        <div className="flex flex-col items-center justify-center gap-0 border-r border-slate-100 dark:border-slate-800 w-full">
-                                            <span className="text-[10px] uppercase text-slate-400 font-bold mb-1">BEFORE</span>
-                                            <span className="text-3xl font-bold text-slate-700 dark:text-slate-200 leading-none">
-                                                {baseVal.toLocaleString()}
-                                            </span>
+                                {/* Numeric Data: Fixed at bottom */}
+                                <div className="p-3 shrink-0 bg-white dark:bg-dashdark-card">
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-center flex-1">
+                                            <p className="text-[9px] font-bold text-slate-400 mb-0.5 uppercase">Before</p>
+                                            <p className="text-xl font-black text-slate-700 dark:text-slate-200 leading-none">
+                                              {baseVal.toLocaleString()}
+                                            </p>
                                         </div>
-                                        <div className="flex flex-col items-center justify-center gap-0 w-full">
-                                            <span className="text-[10px] uppercase text-violet-500 font-bold mb-1">AFTER</span>
-                                            <span className="text-3xl font-bold text-violet-600 dark:text-violet-400 leading-none">
-                                                {optionVal.toLocaleString()}
-                                            </span>
+                                        <div className="w-px h-8 bg-slate-100 dark:bg-slate-800 mx-2" />
+                                        <div className="text-center flex-1">
+                                            <p className="text-[9px] font-bold text-violet-500 mb-0.5 uppercase">After</p>
+                                            <p className="text-xl font-black text-violet-600 dark:text-violet-400 leading-none">
+                                              {optionVal.toLocaleString()}
+                                            </p>
                                         </div>
                                     </div>
 
-                                    <div className={`flex items-center justify-center gap-1.5 rounded-lg py-1 mt-1 mx-auto w-3/4 ${isImprovement ? 'bg-green-50 text-green-700 dark:bg-green-900/20' : 'bg-red-50 text-red-700 dark:bg-red-900/20'}`}>
-                                        {isImprovement ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                                        <span className="text-sm font-bold">
+                                    <div className={`flex items-center justify-center gap-1 rounded-full py-1 px-3 w-fit mx-auto mt-3 ${isImprovement ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                        {isImprovement ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                        <span className="text-xs font-black">
                                             {Math.abs(diff)}% {isImprovement ? t('improvement') : t('decrease')}
                                         </span>
                                     </div>
@@ -319,7 +281,6 @@ export default function Comparison() {
                     );
                 })}
             </div>
-
         </div>
       </div>
     </div>

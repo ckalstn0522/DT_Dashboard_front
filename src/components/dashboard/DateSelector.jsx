@@ -4,10 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { ko, enUS } from 'date-fns/locale';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function DateSelector({ value, onChange, availableDates, disabled }) {
   const [open, setOpen] = useState(false);
+  const { t, language } = useLanguage();
+
+  const currentLocale = language === 'ko' ? ko : enUS;
 
   const handleSelect = (date) => {
     if (date) {
@@ -28,24 +32,24 @@ export default function DateSelector({ value, onChange, availableDates, disabled
   };
 
   return (
-    // ▼▼▼ [수정] 사이드바용 스타일: w-full, flex-col(라벨 위로) 또는 유지
     <div className="flex flex-col gap-2 w-full">
       <div className="flex items-center gap-2 px-1">
         <CalendarIcon className="w-4 h-4 text-indigo-600 dark:text-violet-400" />
-        <span className="text-xs font-medium text-slate-700 dark:text-dashdark-text">날짜 선택</span>
+        <span className="text-xs font-medium text-slate-700 dark:text-dashdark-text">
+          {t('selectDate')}
+        </span>
       </div>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             disabled={disabled}
-            // ▼▼▼ [수정] w-52 -> w-full (꽉 차게)
             className="w-full justify-start text-left font-normal text-sm h-9 bg-white dark:bg-dashdark-bg border-slate-300 dark:border-dashdark-border text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-dashdark-hover"
           >
             {disabled ? (
-              <span className="text-slate-400 dark:text-slate-500 truncate">교차로 선택 필요</span>
+              <span className="text-slate-400 dark:text-slate-500 truncate">{t('selectIntersectionFirst')}</span>
             ) : value === 'all' ? (
-              <span>전체 날짜</span>
+              <span>{t('allDates')}</span>
             ) : (
               <span>{format(new Date(value), 'yyyy-MM-dd')}</span>
             )}
@@ -58,10 +62,10 @@ export default function DateSelector({ value, onChange, availableDates, disabled
               className="w-full justify-start text-sm text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-dashdark-hover"
               onClick={handleAllDates}
             >
-              전체 날짜
+              {t('allDates')}
               {availableDates && availableDates.length > 0 && (
                 <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
-                  ({availableDates.length}일)
+                  ({availableDates.length}{t('daysCount')})
                 </span>
               )}
             </Button>
@@ -72,7 +76,7 @@ export default function DateSelector({ value, onChange, availableDates, disabled
             onSelect={handleSelect}
             disabled={disabledDates}
             initialFocus
-            locale={ko}
+            locale={currentLocale}
             className="rounded-md"
           />
         </PopoverContent>
