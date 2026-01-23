@@ -4,7 +4,7 @@ import { translations } from '../constants/translations';
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState('ko'); // 기본값 한국어
+  const [language, setLanguage] = useState('en'); // 기본값 한국어
 
   const t = (key) => {
     return translations[language][key] || key;
