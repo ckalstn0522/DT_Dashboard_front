@@ -76,7 +76,7 @@ export default function RoutePlanning() {
   const optionSpeed = optionData.avg_speed || 60;
   
   // [수정됨] 변경된 연구 영역의 중심 좌표 (NW: 36.366873, 127.326925 / SE: 36.300134, 127.350779)
-  const center = [(36.300134 + 36.366873) / 2, (127.326925 + 127.350779) / 2];
+  const center = [(36.67282 + 36.63850) / 2, (126.66241 + 126.68897) / 2];
 
   const fetchRoute = async (from, to) => {
     setIsLoadingRoute(true);
