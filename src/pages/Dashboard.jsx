@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart2, Database, Filter, Target, LayoutDashboard, Car, Clock, FileText } from 'lucide-react';
+import { BarChart2, Database, Filter, Target, LayoutDashboard, Car, Clock, FileText, Activity } from 'lucide-react';
 import { useFilter } from "@/context/FilterContext";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -128,104 +128,124 @@ export default function Dashboard() {
     { label: t('kpiFilterTemp'), value: filteredTrafficData.length, icon: Filter, color: 'text-emerald-500' },
   ];
 
-  return (
-    <div className="max-w-[1800px] mx-auto space-y-4 h-[calc(100vh-4rem)] flex flex-col p-2">
-      <div className="flex flex-col md:flex-row gap-3 justify-between items-end md:items-center shrink-0">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <LayoutDashboard className="w-6 h-6 text-violet-500" />
-            {t('dashTitle')}
-          </h1>
+  if (isLoadingIntersections || isLoadingTraffic) {
+     return (
+        <div className="p-6 space-y-6">
+           <Skeleton className="h-10 w-1/3" />
+           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-4"><Skeleton className="h-[600px] w-full" /></div>
+              <div className="lg:col-span-8 space-y-6">
+                 <Skeleton className="h-[100px] w-full" />
+                 <div className="grid grid-cols-2 gap-4">
+                    <Skeleton className="h-[300px] w-full" />
+                    <Skeleton className="h-[300px] w-full" />
+                 </div>
+              </div>
+           </div>
         </div>
+     );
+  }
+
+  return (
+    // [수정된 레이아웃 Wrapper] Comparison.jsx와 동일한 규격 적용
+    <div className="w-full max-w-[1920px] mx-auto p-4 lg:p-6 flex flex-col h-[calc(100vh-20px)] overflow-hidden">
+      
+      {/* [수정된 Header] 폰트 및 여백 통일 */}
+      <div className="mb-4 shrink-0">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+          {t('dashTitle')}
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-dashdark-muted mt-1">{t('mainDashboard')}</p>
       </div>
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-0">
-        {/* 왼쪽 지도 영역 */}
-        <div className="lg:col-span-4 flex flex-col h-full min-h-0">
-          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col h-full overflow-hidden">
-            <CardHeader className="bg-slate-50 dark:bg-dashdark-sidebar border-b border-slate-100 dark:border-dashdark-border py-3 px-4 shrink-0">
-              <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">{t('dashMapTitle')}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 flex-1 relative min-h-0">
-              {isLoadingIntersections ? (
-                <Skeleton className="w-full h-full" />
-              ) : (
-                <div className="w-full h-full">
-                  <IntersectionMap
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-0">
+        
+        {/* [왼쪽 지도 영역] Comparison.jsx와 위치/크기 통일 (lg:col-span-4 xl:col-span-3) */}
+        <div className="lg:col-span-4 xl:col-span-3 h-full min-h-[400px]">
+          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-md h-full flex flex-col overflow-hidden">
+             <CardHeader className="border-b border-slate-50 dark:border-dashdark-border py-3 px-4 shrink-0">
+                <CardTitle className="text-slate-800 dark:text-white flex items-center gap-2 text-sm font-bold">
+                  <Activity className="w-4 h-4 text-violet-600" />
+                  {t('dashMapTitle')}
+                </CardTitle>
+             </CardHeader>
+             <CardContent className="p-0 flex-1 relative bg-slate-50">
+               <div className="absolute inset-0">
+                 <IntersectionMap
                     intersections={intersections}
                     onSelectIntersection={setSelectedIntersection}
                     selectedIntersectionId={selectedIntersection?.intersection_id}
                   />
-                </div>
-              )}
-            </CardContent>
+               </div>
+             </CardContent>
           </Card>
         </div>
 
-        {/* 오른쪽 데이터 영역 */}
-        <div className="lg:col-span-8 flex flex-col gap-4 h-full min-h-0 overflow-y-auto">
+        {/* [오른쪽 데이터 영역] */}
+        <div className="lg:col-span-8 xl:col-span-9 h-full flex flex-col overflow-y-auto pr-1 custom-scrollbar gap-4">
+            
           {/* 상단 KPI */}
-          <div className="grid grid-cols-4 gap-3 shrink-0">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
             {kpiItems.map((item, idx) => (
-               <div key={idx} className="p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col items-center justify-center gap-1">
+                <div key={idx} className="p-3 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm flex flex-col items-center justify-center gap-1">
                   <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-dashdark-muted">
                     <item.icon className="w-3 h-3" /> {item.label}
                   </div>
                   <span className={`text-lg font-bold ${item.color}`}>{item.value}</span>
-               </div>
+                </div>
             ))}
           </div>
 
-          {/* 중간: 교차로 시각화 (높이를 65%로 유지) */}
-          <div className="h-[65%] grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[350px] shrink-0">
-            <div className="flex flex-col gap-4 h-full">
+          {/* 중간: 교차로 시각화 (높이 조절) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[350px] shrink-0">
+            <div className="flex flex-col gap-2 h-full">
                 <div className="flex items-center justify-between shrink-0">
                     <h3 className="text-sm font-bold text-slate-700 dark:text-white border-l-4 border-slate-500 pl-2">{t('base')}</h3>
                 </div>
-                <div className="flex-1 h-full min-h-0">
+                <div className="flex-1 h-full min-h-0 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm p-2">
                     <TrafficVolumeDisplay trafficData={filteredTrafficData} />
                 </div>
             </div>
 
-            <div className="flex flex-col gap-4 h-full">
+            <div className="flex flex-col gap-2 h-full">
                 <div className="flex items-center justify-between shrink-0">
                     <h3 className="text-sm font-bold text-violet-600 dark:text-violet-400 border-l-4 border-violet-500 pl-2">{t('option')}</h3>
                 </div>
-                <div className="flex-1 h-full min-h-0">
+                <div className="flex-1 h-full min-h-0 bg-white dark:bg-dashdark-card rounded-lg border border-slate-200 dark:border-dashdark-border shadow-sm p-2">
                     <TrafficVolumeDisplay trafficData={optionTrafficData} />
                 </div>
             </div>
           </div>
 
           {/* 하단: 데이터 요약 카드 */}
-          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm flex-1 min-h-[200px] flex flex-col">
-             <CardHeader className="py-3 px-4 border-b border-slate-100 dark:border-dashdark-border shrink-0">
+          <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm flex-1 min-h-[200px] flex flex-col mb-1">
+              <CardHeader className="py-3 px-4 border-b border-slate-100 dark:border-dashdark-border shrink-0">
                 <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <FileText className="w-4 h-4 text-slate-500" />
                     {t('intersectionDataTitle')} 
                 </CardTitle>
-             </CardHeader>
-             <CardContent className="p-4 flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+              </CardHeader>
+              <CardContent className="p-4 flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 
                 {/* Base Stats */}
-                <div className="flex items-center justify-around p-6 bg-slate-50 dark:bg-dashdark-sidebar rounded-lg border border-slate-100 dark:border-dashdark-border h-full max-h-[160px]">
+                <div className="flex items-center justify-around p-4 bg-slate-50 dark:bg-dashdark-sidebar rounded-lg border border-slate-100 dark:border-dashdark-border h-full max-h-[140px]">
                     <div className="text-center">
-                        <div className="text-sm text-slate-500 mb-2">{t('volume')}</div>
-                        <div className="font-bold text-2xl text-slate-800 dark:text-white flex items-center gap-2 justify-center">
-                            <Car className="w-5 h-5 text-slate-400"/> {baseStats.volume.toLocaleString()}
+                        <div className="text-xs text-slate-500 mb-1">{t('volume')}</div>
+                        <div className="font-bold text-xl text-slate-800 dark:text-white flex items-center gap-1 justify-center">
+                            <Car className="w-4 h-4 text-slate-400"/> {baseStats.volume.toLocaleString()}
                         </div>
                     </div>
-                    <div className="w-px h-12 bg-slate-200 dark:bg-dashdark-border"></div>
+                    <div className="w-px h-8 bg-slate-200 dark:bg-dashdark-border"></div>
                     <div className="text-center">
-                        <div className="text-sm text-slate-500 mb-2">{t('delay')}</div>
-                        <div className="font-bold text-2xl text-slate-800 dark:text-white flex items-center gap-2 justify-center">
-                            <Clock className="w-5 h-5 text-slate-400"/> {baseStats.delay}s
+                        <div className="text-xs text-slate-500 mb-1">{t('delay')}</div>
+                        <div className="font-bold text-xl text-slate-800 dark:text-white flex items-center gap-1 justify-center">
+                            <Clock className="w-4 h-4 text-slate-400"/> {baseStats.delay}s
                         </div>
                     </div>
-                    <div className="w-px h-12 bg-slate-200 dark:bg-dashdark-border"></div>
+                    <div className="w-px h-8 bg-slate-200 dark:bg-dashdark-border"></div>
                     <div className="text-center">
-                        <div className="text-sm text-slate-500 mb-2">{t('los')}</div>
-                        <div className={`font-bold text-3xl px-4 py-1 rounded-md ${
+                        <div className="text-xs text-slate-500 mb-1">{t('los')}</div>
+                        <div className={`font-bold text-2xl px-3 py-0.5 rounded-md ${
                             baseStats.los === 'A' || baseStats.los === 'B' ? 'bg-green-100 text-green-700' :
                             baseStats.los === 'C' || baseStats.los === 'D' ? 'bg-yellow-100 text-yellow-700' :
                             'bg-red-100 text-red-700'
@@ -236,24 +256,24 @@ export default function Dashboard() {
                 </div>
 
                 {/* Option Stats */}
-                <div className="flex items-center justify-around p-6 bg-violet-50 dark:bg-violet-900/10 rounded-lg border border-violet-100 dark:border-violet-800 h-full max-h-[160px]">
+                <div className="flex items-center justify-around p-4 bg-violet-50 dark:bg-violet-900/10 rounded-lg border border-violet-100 dark:border-violet-800 h-full max-h-[140px]">
                     <div className="text-center">
-                        <div className="text-sm text-violet-500 mb-2">{t('volume')}</div>
-                        <div className="font-bold text-2xl text-violet-800 dark:text-violet-300 flex items-center gap-2 justify-center">
-                            <Car className="w-5 h-5 text-violet-400"/> {optionStats.volume.toLocaleString()}
+                        <div className="text-xs text-violet-500 mb-1">{t('volume')}</div>
+                        <div className="font-bold text-xl text-violet-800 dark:text-violet-300 flex items-center gap-1 justify-center">
+                            <Car className="w-4 h-4 text-violet-400"/> {optionStats.volume.toLocaleString()}
                         </div>
                     </div>
-                    <div className="w-px h-12 bg-violet-200 dark:bg-violet-800"></div>
+                    <div className="w-px h-8 bg-violet-200 dark:bg-violet-800"></div>
                     <div className="text-center">
-                        <div className="text-sm text-violet-500 mb-2">{t('delay')}</div>
-                        <div className="font-bold text-2xl text-violet-800 dark:text-violet-300 flex items-center gap-2 justify-center">
-                            <Clock className="w-5 h-5 text-violet-400"/> {optionStats.delay}s
+                        <div className="text-xs text-violet-500 mb-1">{t('delay')}</div>
+                        <div className="font-bold text-xl text-violet-800 dark:text-violet-300 flex items-center gap-1 justify-center">
+                            <Clock className="w-4 h-4 text-violet-400"/> {optionStats.delay}s
                         </div>
                     </div>
-                    <div className="w-px h-12 bg-violet-200 dark:bg-violet-800"></div>
+                    <div className="w-px h-8 bg-violet-200 dark:bg-violet-800"></div>
                     <div className="text-center">
-                        <div className="text-sm text-violet-500 mb-2">{t('los')}</div>
-                        <div className={`font-bold text-3xl px-4 py-1 rounded-md ${
+                        <div className="text-xs text-violet-500 mb-1">{t('los')}</div>
+                        <div className={`font-bold text-2xl px-3 py-0.5 rounded-md ${
                             optionStats.los === 'A' || optionStats.los === 'B' ? 'bg-green-100 text-green-700' :
                             optionStats.los === 'C' || optionStats.los === 'D' ? 'bg-yellow-100 text-yellow-700' :
                             'bg-red-100 text-red-700'
@@ -262,7 +282,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                 </div>
-             </CardContent>
+              </CardContent>
           </Card>
 
         </div>

@@ -82,7 +82,7 @@ export default function Comparison() {
     );
   }
 
-  // --- 시각화 컴포넌트 (높이 가변형) ---
+  // --- 시각화 컴포넌트 ---
 
   const RenderSimpleBar = ({ base, option, color }) => {
     const data = [{ name: 'BEFORE', value: base }, { name: 'AFTER', value: option }];
@@ -119,6 +119,7 @@ export default function Comparison() {
     </div>
   );
 
+  // [수정] 게이지 차트 위치 상향 조정 (cy="85%") 및 크기 확대 (outerRadius="100%")
   const RenderGaugeChart = ({ base, option }) => {
     const MAX_VAL = 120;
     const data = [
@@ -126,15 +127,21 @@ export default function Comparison() {
       { name: 'AFTER', value: Math.min(option, MAX_VAL), color: '#8b5cf6' }
     ];
     return (
-      <div className="flex justify-around items-center w-full h-full">
+      <div className="flex justify-around items-end w-full h-full pb-2">
         {data.map((item) => (
-          <div key={item.name} className="relative w-[40%] h-[80%] flex flex-col items-center justify-center">
+          <div key={item.name} className="relative w-[45%] h-[95%] flex flex-col items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={[{ v: item.value }, { v: MAX_VAL - item.value }]}
-                  cx="50%" cy="100%" startAngle={180} endAngle={0}
-                  innerRadius="65%" outerRadius="100%" dataKey="v" stroke="none"
+                  cx="50%" 
+                  cy="85%" 
+                  startAngle={180} 
+                  endAngle={0}
+                  innerRadius="60%" 
+                  outerRadius="100%"
+                  dataKey="v" 
+                  stroke="none"
                 >
                   <Cell fill={item.color} />
                   <Cell fill="#f1f5f9" />
@@ -190,19 +197,20 @@ export default function Comparison() {
   };
 
   return (
-    <div className="w-full max-w-[1920px] mx-auto p-4 lg:p-6 flex flex-col h-[calc(100vh-40px)] overflow-hidden">
-      {/* Header Area */}
+    // [통일된 레이아웃 Wrapper]
+    <div className="w-full max-w-[1920px] mx-auto p-4 lg:p-6 flex flex-col h-[calc(100vh-20px)] overflow-hidden">
+      
+      {/* [통일된 Header] */}
       <div className="mb-4 shrink-0">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
           {t('compTitle')}
         </h1>
-        <p className="text-sm text-slate-500 dark:text-dashdark-muted">{t('compDesc')}</p>
+        <p className="text-sm text-slate-500 dark:text-dashdark-muted mt-1">{t('compDesc')}</p>
       </div>
 
-      {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-0">
         
-        {/* Left: Map Section (4 Columns) */}
+        {/* [왼쪽: 지도 영역] (Comparison, Dashboard, RoutePlanning 위치 통일) */}
         <div className="lg:col-span-4 xl:col-span-3 h-full min-h-[400px]">
             <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-md h-full flex flex-col overflow-hidden">
                 <CardHeader className="border-b border-slate-50 dark:border-dashdark-border py-3 px-4 shrink-0">
@@ -219,9 +227,9 @@ export default function Comparison() {
             </Card>
         </div>
 
-        {/* Right: Metrics Grid (8 Columns) */}
-        <div className="lg:col-span-8 xl:col-span-9 h-full flex flex-col">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 md:grid-rows-3 xl:grid-rows-2 gap-4 h-full">
+        {/* [오른쪽: 데이터 영역] */}
+        <div className="lg:col-span-8 xl:col-span-9 h-full flex flex-col overflow-y-auto pr-1 custom-scrollbar">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 md:grid-rows-3 xl:grid-rows-2 gap-4 h-full min-h-[600px]">
                 {metrics.map((metric) => {
                     const rawBase = getMetricValue(baseData, metric.key);
                     const rawOption = getMetricValue(optionData, metric.key);
@@ -246,12 +254,10 @@ export default function Comparison() {
                             </CardHeader>
 
                             <CardContent className="p-0 flex-1 flex flex-col min-h-0">
-                                {/* Visualization: flex-1 allows it to grow vertically */}
                                 <div className="flex-1 w-full bg-slate-50/50 dark:bg-slate-900/10 flex items-center justify-center p-2 border-b border-slate-50 min-h-0">
                                     {renderVisualization(metric, baseVal, optionVal)}
                                 </div>
 
-                                {/* Numeric Data: Fixed at bottom */}
                                 <div className="p-3 shrink-0 bg-white dark:bg-dashdark-card">
                                     <div className="flex items-center justify-between">
                                         <div className="text-center flex-1">
