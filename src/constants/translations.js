@@ -98,7 +98,7 @@ export const translations = {
     radarTitle: "Comprehensive Analysis",
     improvement: "Improvement",
     decrease: "Decrease",
-    compMapTitle: "Study area",
+    compMapTitle: "Study Area",
 
     // Metrics
     vht: "VHT (Total Travel Time)",

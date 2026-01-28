@@ -216,7 +216,7 @@ export default function Comparison() {
         {/* Left Map */}
         <motion.div variants={itemVariants} className="lg:col-span-4 xl:col-span-3 h-full min-h-[400px]">
             <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-md h-full flex flex-col overflow-hidden hover:shadow-xl transition-shadow">
-                <CardHeader className="border-b border-slate-50 dark:border-dashdark-border py-3 px-4 shrink-0 bg-slate-50/50 backdrop-blur-sm">
+                <CardHeader className="border-b border-slate-50 dark:border-dashdark-border py-3 px-4 shrink-0 bg-slate-900/50 backdrop-blur-sm">
                   <CardTitle className="text-slate-800 dark:text-white flex items-center gap-2 text-sm font-bold">
                     <Activity className="w-4 h-4 text-violet-600 animate-pulse" />
                     {t('compMapTitle')} 
