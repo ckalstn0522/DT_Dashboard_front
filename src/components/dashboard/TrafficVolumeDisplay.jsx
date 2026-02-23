@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navigation, Car, Clock, AlignJustify } from 'lucide-react';
-import { useLanguage } from "@/context/LanguageContext"; // [추가] 언어 컨텍스트 임포트
+import { useLanguage } from "@/context/LanguageContext"; 
 
 // 방향별 설정 (진입 기준)
 const approachConfig = {
@@ -11,13 +11,12 @@ const approachConfig = {
   'W': { position: 'left', color: 'rgb(249, 115, 22)' },
 };
 
-export default function TrafficVolumeDisplay({ trafficData, intersectionImage }) {
-  const { t } = useLanguage(); // [추가] t 함수 사용
+export default function TrafficVolumeDisplay({ trafficData, intersectionImage, compact = false }) {
+  const { t } = useLanguage(); 
 
   if (!trafficData || trafficData.length === 0) {
     return (
-      <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm h-full flex justify-center items-center">
-        {/* 번역 적용: selectPrompt */}
+      <Card className={`h-full flex flex-col justify-center items-center ${compact ? 'bg-transparent border-0 shadow-none' : 'bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm'}`}>
         <div className="text-slate-400 dark:text-slate-600 text-sm">{t('selectPrompt')}</div>
       </Card>
     );
@@ -27,15 +26,13 @@ export default function TrafficVolumeDisplay({ trafficData, intersectionImage })
   const aggregatedData = useMemo(() => {
     const result = { N: null, S: null, E: null, W: null };
 
-    // 초기화
     Object.keys(result).forEach(key => {
       result[key] = { volume: 0, queue: 0, delay: 0, count: 0 };
     });
 
-    // 데이터 순회하며 집계
     trafficData.forEach(data => {
       const dirCode = data.direction_eng || ''; 
-      const origin = dirCode.charAt(0); // 'N', 'S', 'E', 'W'
+      const origin = dirCode.charAt(0); 
 
       if (result[origin]) {
         const vol = data.소계_대 || 0;
@@ -44,7 +41,7 @@ export default function TrafficVolumeDisplay({ trafficData, intersectionImage })
       }
     });
 
-    // 2. 대기행렬 및 지체시간 계산 (교통량 비례 가상 로직)
+    // 2. 대기행렬 및 지체시간 계산
     Object.keys(result).forEach(key => {
       const vol = result[key].volume;
       if (vol > 0) {
@@ -61,63 +58,67 @@ export default function TrafficVolumeDisplay({ trafficData, intersectionImage })
     const config = approachConfig[dir];
     const data = aggregatedData[dir];
     
-    // 해당 방향 데이터가 없으면 렌더링 안 함
     if (!data) return null;
 
-    // 위치에 따른 스타일 조정
+    // 중앙에서 가장 멀어지도록 top-1, bottom-1, left-1, right-1 적용
     const positionStyles = {
-      top: "top-4 left-1/2 -translate-x-1/2 flex-row",
-      bottom: "bottom-4 left-1/2 -translate-x-1/2 flex-row",
-      left: "left-4 top-1/2 -translate-y-1/2 flex-col",
-      right: "right-4 top-1/2 -translate-y-1/2 flex-col",
+      top: "top-1 left-1/2 -translate-x-1/2",
+      bottom: "bottom-1 left-1/2 -translate-x-1/2",
+      left: "left-1 top-1/2 -translate-y-1/2",
+      right: "right-1 top-1/2 -translate-y-1/2",
     };
 
     return (
-      <div className={`absolute z-20 bg-white/95 dark:bg-dashdark-sidebar/95 backdrop-blur-sm p-3 rounded-xl border border-slate-200 dark:border-dashdark-border shadow-lg flex gap-3 ${positionStyles[config.position]}`}>
-        {/* 방향 라벨 제거됨 (이전 요청 반영) */}
+      // 카드의 너비와 높이를 고정 (w-[125px] h-[85px])하여 데이터가 길어져도 크기 불변
+      <div className={`absolute z-20 bg-white/95 dark:bg-dashdark-sidebar/95 backdrop-blur-sm p-2 rounded-xl border border-slate-200 dark:border-dashdark-border shadow-lg flex flex-col justify-center gap-1.5 w-[143px] h-[85px] overflow-hidden ${positionStyles[config.position]}`}>
         
-        {/* 데이터 수치 */}
-        <div className="flex flex-col justify-center gap-1 min-w-[80px]">
-          {/* 교통량 */}
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <Car className="w-3 h-3" /> {t('vehicleCount')}
-            </span>
-            <span className="text-sm font-bold text-slate-900 dark:text-white">
-              {data.volume.toLocaleString()}
-            </span>
-          </div>
-          {/* 대기행렬 */}
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <AlignJustify className="w-3 h-3" /> {t('queue')}
-            </span>
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {data.queue}m
-            </span>
-          </div>
-          {/* 지체시간 */}
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <Clock className="w-3 h-3" /> {t('delaySimple')}
-            </span>
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {data.delay}s
-            </span>
-          </div>
+        {/* 교통량 */}
+        <div className="flex items-start justify-between w-full gap-1">
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center shrink-0 mt-0.5">
+            <Car className="w-3 h-3 mr-1" /> {t('vehicleCount')}
+          </span>
+          {/* break-all을 통해 생략 없이 줄바꿈 처리 */}
+          <span className="text-xs font-bold text-slate-900 dark:text-white text-right break-all leading-tight">
+            {data.volume.toLocaleString()}
+          </span>
         </div>
+        
+        {/* 대기행렬 */}
+        <div className="flex items-start justify-between w-full gap-1">
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center shrink-0 mt-0.5">
+            <AlignJustify className="w-3 h-3 mr-1" /> {t('queue')}
+          </span>
+          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 text-right break-all leading-tight">
+            {data.queue}m
+          </span>
+        </div>
+        
+        {/* 지체시간 */}
+        <div className="flex items-start justify-between w-full gap-1">
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center shrink-0 mt-0.5">
+            <Clock className="w-3 h-3 mr-1" /> {t('delaySimple')}
+          </span>
+          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 text-right break-all leading-tight">
+            {data.delay}s
+          </span>
+        </div>
+        
       </div>
     );
   };
 
   return (
-    <Card className="bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm h-full flex flex-col">
-      <CardHeader className="py-3 px-4 border-b border-slate-100 dark:border-dashdark-border shrink-0">
-        <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Navigation className="w-4 h-4 text-violet-500" />
-          {t('trafficVolumeDirectional')}
-        </CardTitle>
-      </CardHeader>
+    <Card className={`h-full flex flex-col ${compact ? 'bg-transparent border-0 shadow-none' : 'bg-white dark:bg-dashdark-card border-slate-200 dark:border-dashdark-border shadow-sm'}`}>
+      
+      {!compact && (
+        <CardHeader className="py-3 px-4 border-b border-slate-100 dark:border-dashdark-border shrink-0">
+          <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Navigation className="w-4 h-4 text-violet-500" />
+            {t('trafficVolumeDirectional')}
+          </CardTitle>
+        </CardHeader>
+      )}
+
       <CardContent className="p-0 relative flex-1 overflow-hidden min-h-[300px]">
         {intersectionImage && (
           <div className="absolute inset-0 z-0 opacity-10 dark:opacity-20 pointer-events-none">

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2 } from 'lucide-react';
+import { Building2, Car, Activity } from 'lucide-react';
 
 // 컴포넌트 임포트
 import IntersectionMap from "../../components/dashboard/IntersectionMap";
@@ -20,7 +20,6 @@ const hudCardStyle = "bg-slate-950/90 backdrop-blur-md border-slate-800/80 shado
 export default function CombinedHUD() {
   const [selectedId, setSelectedId] = useState(null);
   
-  // 언어 설정 가져오기
   const { language } = useLanguage();
   const isKo = language === 'ko';
 
@@ -61,7 +60,7 @@ export default function CombinedHUD() {
     return intersections.find(i => String(i.intersection_id) === String(selectedId));
   }, [selectedId, intersections]);
 
-  // 개선 후(After) 데이터 생성을 위한 Option 데이터 로직
+  // 개선 후(After) 데이터 생성용
   const optionTrafficData = useMemo(() => {
     return filteredTrafficData.map(data => {
       const multiplier = 1.0 + Math.random() * 2.0; 
@@ -103,7 +102,7 @@ export default function CombinedHUD() {
           scrollBehavior: 'smooth'
         }}
       >
-        {/* 정보 카드 - 제목 정렬을 위해 py-2 px-4로 통일, mb-2 제거 */}
+        {/* 1. 교차로 정보 카드 */}
         <Card className={`w-full shrink-0 flex flex-col justify-center overflow-hidden py-2 ${hudCardStyle}`}>
           <CardHeader className="py-2 px-4 min-h-0 shrink-0 border-b border-slate-700/50"> 
             <CardTitle className="text-slate-100 flex items-center gap-2 text-sm font-semibold">
@@ -139,22 +138,34 @@ export default function CombinedHUD() {
 
         {selectedId && (
           <>
-            {/* 차종 분포 */}
-            <Card className={`min-h-[220px] w-full shrink-0 overflow-hidden ${hudCardStyle}`}>
-              <CardContent className="p-0 h-full flex flex-col">
+            {/* 2. 차종 분포 카드 */}
+            <Card className={`min-h-[220px] w-full shrink-0 flex flex-col overflow-hidden py-2 ${hudCardStyle}`}>
+              <CardHeader className="py-2 px-4 min-h-0 shrink-0 border-b border-slate-700/50">
+                <CardTitle className="text-slate-100 flex items-center gap-2 text-sm font-semibold">
+                  <Car className="w-4 h-4 text-cyan-400" />
+                  {isKo ? '차종 분포' : 'Vehicle Distribution'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0 flex-1 min-h-0 flex flex-col">
                   <VehicleTypeChart trafficData={filteredTrafficData} compact={true} />
               </CardContent>
             </Card>
 
-            {/* 개선 후 (After) 방향별 교통량 (Before 삭제, After가 남은 공간 flex-1으로 차지) */}
-            <Card className={`flex-1 min-h-[250px] w-full shrink-0 overflow-hidden ${hudCardStyle} p-3 flex flex-col`}>
-              <h3 className="text-sm font-semibold text-violet-300 mb-3 border-l-4 border-violet-500 pl-2 shrink-0">
-                {isKo ? '개선 후 (After) 방향별 교통량' : 'Directional Traffic (After)'}
-              </h3>
-              <div className="flex-1 min-h-0">
-                <TrafficVolumeDisplay trafficData={optionTrafficData} />
-              </div>
+            {/* 3. 개선 후 (After) 방향별 교통량 카드 */}
+            <Card className={`flex-1 min-h-[250px] w-full shrink-0 flex flex-col overflow-hidden py-2 ${hudCardStyle}`}>
+              <CardHeader className="py-2 px-4 min-h-0 shrink-0 border-b border-slate-700/50">
+                <CardTitle className="text-slate-100 flex items-center gap-2 text-sm font-semibold">
+                  <Activity className="w-4 h-4 text-violet-400" />
+                  {isKo ? '개선 후 (After) 방향별 교통량' : 'Directional Traffic (After)'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 flex-1 min-h-0 flex flex-col relative">
+                {/* HUD 전용 모드이므로 compact={true}를 주어 중복 제목 발생을 차단 */}
+                <TrafficVolumeDisplay trafficData={optionTrafficData} compact={true} />
+              </CardContent>
             </Card>
+
+            <div className="h-5 shrink-0"></div>
           </>
         )}
       </div>
